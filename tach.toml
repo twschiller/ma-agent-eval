@@ -36,7 +36,14 @@ depends_on = ["maeval.submissions.models"]
 
 [[modules]]
 path = "maeval.submissions.views"
-depends_on = ["maeval.submissions.schemas", "maeval.submissions.models"]
+depends_on = [
+    "maeval.submissions.schemas",
+    "maeval.submissions.models",
+    # The write path authenticates principals and enforces API-key scopes via
+    # the accounts auth contract.
+    "maeval.accounts.auth",
+    "maeval.accounts.models",
+]
 
 [cache]
 backend = "disk"

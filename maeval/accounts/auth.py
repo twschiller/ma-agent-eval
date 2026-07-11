@@ -10,6 +10,7 @@ from ``request.auth.is_agent`` — the client never asserts it.
 
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from ninja.errors import HttpError
 from ninja.security import HttpBasicAuth, HttpBearer
 
 from maeval.accounts.models import ApiKey, User
@@ -44,3 +45,17 @@ class ApiKeyAuth(HttpBearer):
 # Both principal kinds may call shared endpoints (e.g. /me); order is
 # irrelevant since Basic and Bearer use different Authorization schemes.
 ANY_PRINCIPAL: list[object] = [HumanBasicAuth(), ApiKeyAuth()]
+
+
+def require_scope(request, scope: str) -> None:
+    """Enforce that an agent caller's presenting key carries ``scope``.
+
+    Scopes constrain what an *agent* may do on its principal's behalf; a human
+    over Basic auth acts with full authority and is never scope-limited. Agents
+    authenticate via :class:`ApiKeyAuth`, which stashes the key on the request,
+    so a missing stash means the caller is a human. Raises 403 for an agent
+    whose key lacks the scope; call after auth has populated ``request.auth``.
+    """
+    key = getattr(request, "api_key", None)
+    if key is not None and scope not in key.scopes:
+        raise HttpError(403, f"missing required scope: {scope}")
