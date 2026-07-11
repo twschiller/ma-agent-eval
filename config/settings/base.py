@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "maeval.common",
     "maeval.accounts",
     "maeval.submissions",
+    "maeval.traces",
 ]
 
 # Agents and humans are both rows in this custom user model (see ADR-0003).

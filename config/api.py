@@ -9,6 +9,7 @@ from ninja import NinjaAPI, Schema
 
 from maeval.accounts.views import router as accounts_router
 from maeval.submissions.views import router as submissions_router
+from maeval.traces.views import router as traces_router
 
 api = NinjaAPI(
     title="MA Agent Eval API",
@@ -29,3 +30,4 @@ def healthz(request) -> Health:  # noqa: ARG001  (Ninja passes the request)
 
 api.add_router("/accounts", accounts_router)
 api.add_router("/submissions", submissions_router)
+api.add_router("/traces", traces_router)
