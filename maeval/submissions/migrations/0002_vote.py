@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     "voter",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="votes",
+                        related_name="votes_cast",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),

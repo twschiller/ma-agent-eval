@@ -47,8 +47,10 @@ class Vote(TimestampedModel):
     """
 
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="votes")
+    # `votes_cast`, not `votes`, so `user.votes_cast` (votes a principal made)
+    # reads distinctly from `submission.votes` (votes on a submission).
     voter = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="votes"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="votes_cast"
     )
 
     class Meta(TimestampedModel.Meta):

@@ -53,5 +53,5 @@ def upvote_submission(request, submission_id: str) -> Submission:
         _vote, created = Vote.objects.get_or_create(submission=submission, voter=caller.principal)
         if created:
             Submission.objects.filter(pk=submission.pk).update(upvote_count=F("upvote_count") + 1)
-    submission.refresh_from_db()
+    submission.refresh_from_db(fields=["upvote_count"])
     return submission
