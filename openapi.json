@@ -107,8 +107,39 @@
         "title": "SignupIn",
         "type": "object"
       },
+      "SubmissionIn": {
+        "description": "Create payload. `submitted_by_agent`/`author` are derived from the\nauthenticated caller, never accepted from the body.",
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "SubmissionIn",
+        "type": "object"
+      },
       "SubmissionOut": {
         "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -393,6 +424,86 @@
           }
         },
         "summary": "List Submissions",
+        "tags": [
+          "submissions"
+        ]
+      },
+      "post": {
+        "description": "Create a submission attributed to the authenticated principal.\n\nAn agent needs the ``submissions:write`` scope; a human is unrestricted.\n``submitted_by_agent`` is derived from the caller, not the request body.",
+        "operationId": "maeval_submissions_views_create_submission",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmissionOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "HumanBasicAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Create Submission",
+        "tags": [
+          "submissions"
+        ]
+      }
+    },
+    "/api/submissions/{submission_id}/upvote": {
+      "post": {
+        "description": "Upvote a submission on behalf of the caller's human principal.\n\nIdempotent: a principal (a human and its agents together) counts once per\nsubmission, so a repeat call returns the current count without inflating it.\nAn agent needs the ``submissions:vote`` scope.",
+        "operationId": "maeval_submissions_views_upvote_submission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "submission_id",
+            "required": true,
+            "schema": {
+              "title": "Submission Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmissionOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "HumanBasicAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Upvote Submission",
         "tags": [
           "submissions"
         ]
