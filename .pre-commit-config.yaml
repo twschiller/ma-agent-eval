@@ -1,0 +1,154 @@
+# Pre-commit hook stack for a Python 3.14 + uv + Django Ninja project.
+# After cloning: `uv run pre-commit install --install-hooks`.
+# Bump `rev:`s with `uv run pre-commit autoupdate` (does not touch
+# `additional_dependencies:` pins — bump those by hand).
+default_install_hook_types: [pre-commit, pre-push]
+default_language_version:
+  node: "24.12.0"
+  python: python3.14
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+        name: Detect hardcoded secrets
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: debug-statements
+      - id: detect-private-key
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        args: [--number]
+        additional_dependencies:
+          - mdformat-frontmatter
+          - mdformat-gfm
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.0
+    hooks:
+      - id: markdownlint-cli2
+        name: Lint Markdown files
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.21
+    hooks:
+      - id: ruff-check
+        name: Ruff lint
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        name: Ruff format
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.25.2
+    hooks:
+      - id: pyproject-fmt
+
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.31.1
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, "6.0"]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.4
+    hooks:
+      - id: bandit
+        args: ["--skip", "B101"]
+        exclude: ^(.*/(tests|migrations)/|scripts/)
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+        name: Lint GitHub Actions workflows
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.26.1
+    hooks:
+      - id: zizmor
+        name: Audit GitHub Actions workflows (zizmor)
+
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+        name: Lint Dockerfiles (hadolint)
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell
+        name: Detect typos
+        exclude: \.(lock|generated\..*)$|^openapi\.json$
+
+  - repo: local
+    hooks:
+      # Project static-analysis rules. Plumbing is in place; rules live in
+      # .semgrep/rules/ and are added incrementally. Runs via uv (pinned in
+      # uv.lock), not a separate semgrep install.
+      - id: semgrep
+        name: Semgrep (project static analysis)
+        entry: uv run semgrep scan --config .semgrep --error --quiet
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      # Make exception variables greppable: `exc`, never `e`.
+      - id: no-except-as-e
+        name: Use `exc`, not `e`, as caught-exception variable name
+        language: pygrep
+        entry: '\bexcept\b[^\n:]*\bas\s+e\b'
+        types: [python]
+
+      # Enforce app/layer import boundaries. Requires tach.toml.
+      - id: tach
+        name: Enforce module boundaries (tach)
+        entry: uv run tach check
+        language: system
+        pass_filenames: false
+        files: \.py$
+
+      # Fail if models drift from migrations.
+      - id: django-makemigrations-check
+        name: Django makemigrations --check
+        entry: env DATABASE_URL=postgres://postgres:postgres@localhost:5432/app uv run python manage.py makemigrations --check --dry-run
+        language: system
+        pass_filenames: false
+        files: \.py$
+
+      # Lint the generated OpenAPI schema (agent-facing contract).
+      - id: spectral-openapi
+        name: Lint OpenAPI schema (spectral)
+        entry: bash -c 'uv run python tools/export_openapi.py && npx @stoplight/spectral-cli@6.16.0 lint openapi.json'
+        language: system
+        pass_filenames: false
+        files: \.py$
+
+      # Pyright is slow — run on pre-push, not every commit.
+      - id: pyright-full
+        name: Pyright full check
+        entry: bash -c 'uv run pyright'
+        language: system
+        pass_filenames: false
+        files: \.(py|toml)$
+        stages: [pre-push]

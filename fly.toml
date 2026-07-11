@@ -1,0 +1,37 @@
+# fly.toml — Fly.io app config. One app, scale-to-zero, Neon for Postgres.
+# Bootstrap:
+#   fly launch --no-deploy          # creates the app, then edit this file
+#   fly secrets set DATABASE_URL='postgres://USER:PASS@HOST.neon.tech/DB?sslmode=require'
+#   fly secrets set DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
+#   fly deploy
+# Neon gives you the DATABASE_URL — use a pooled connection string and keep
+# sslmode=require. Do NOT provision `fly postgres`; Neon is the database.
+app = "ma-agent-eval"
+primary_region = "iad"
+
+[build]
+
+[deploy]
+  release_command = "python manage.py migrate --noinput"
+
+[env]
+  DJANGO_SETTINGS_MODULE = "config.settings.production"
+  DJANGO_ALLOWED_HOSTS = "ma-agent-eval.fly.dev"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

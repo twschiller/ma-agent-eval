@@ -1,0 +1,19 @@
+# Starter rule — safe to delete once real project-specific rules exist.
+# A low-false-positive example that demonstrates the rule format. Patterns that
+# contain a colon must be quoted, or YAML misreads them as a mapping.
+rules:
+  - id: no-eval-or-exec
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Avoid eval()/exec() — they execute arbitrary code. If you genuinely need
+      dynamic dispatch, use a lookup table and add a `# nosemgrep: no-eval-or-exec`
+      with a reason.
+    patterns:
+      - pattern-either:
+          - pattern: "eval(...)"
+          - pattern: "exec(...)"
+    paths:
+      exclude:
+        - "**/tests/**"
+        - "**/migrations/**"

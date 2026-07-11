@@ -1,0 +1,6 @@
+# markdownlint-cli2 config. mdformat owns whitespace/formatting; markdownlint
+# catches structural issues. Disable rules that fight prose or the CLAUDE stub.
+config:
+  MD013: false   # line length — noise for prose and tables
+  MD041: false   # first line need not be an h1 (CLAUDE.md is a `@AGENTS.md` stub)
+  MD033: false   # allow inline HTML (e.g. <details>, placeholders in templates)

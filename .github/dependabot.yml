@@ -1,0 +1,63 @@
+# .github/dependabot.yml
+# Weekly updates, 7-day cooldown so versions settle before a PR opens,
+# at most 5 open PRs per ecosystem, grouped to keep the queue small.
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      python:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "deps"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "deps"
+      - "ci"
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      patch-updates:
+        update-types:
+          - "patch"
+    labels:
+      - "deps"
+      - "tooling"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      patch-updates:
+        update-types:
+          - "patch"
+    labels:
+      - "deps"

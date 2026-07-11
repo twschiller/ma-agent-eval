@@ -1,0 +1,26 @@
+# tach.toml — enforce intra-app layering: views → schemas → models.
+# Lower layers must not import higher ones. `common` is a utility module,
+# importable from anywhere. Django Ninja routers live in `views.py` and are
+# mounted centrally in `config/api.py`, so there is no per-app `urls` layer.
+# Run `uv run tach check` (wired into pre-commit + CI).
+# Regenerate/scaffold after adding apps: `uv run tach mod`.
+
+[[modules]]
+path = "maeval.common"
+depends_on = []
+utility = true
+
+[[modules]]
+path = "maeval.submissions.models"
+depends_on = ["maeval.common"]
+
+[[modules]]
+path = "maeval.submissions.schemas"
+depends_on = ["maeval.submissions.models"]
+
+[[modules]]
+path = "maeval.submissions.views"
+depends_on = ["maeval.submissions.schemas", "maeval.submissions.models"]
+
+[cache]
+backend = "disk"

@@ -1,0 +1,7 @@
+# Spectral ruleset for the generated OpenAPI schema (openapi.json).
+# Extends the built-in OpenAPI (oas) ruleset. Tighten as the API contract grows.
+extends: ["spectral:oas"]
+rules:
+  # Django Ninja emits an `operationId`; keep info.contact optional for now.
+  info-contact: off
+  oas3-api-servers: off

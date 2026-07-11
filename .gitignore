@@ -294,3 +294,21 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+
+### Project (ma-agent-eval) ###
+# Django collected static assets (regenerated at build)
+/static/
+/staticfiles/
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+
+# Keep the committed example env; ignore real dotenvs already covered above,
+# but make the negation explicit.
+!.env.example
+
+# Agent worktrees / scratch data
+.claude/worktrees/
+/data/

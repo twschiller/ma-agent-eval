@@ -1,0 +1,111 @@
+{
+  "components": {
+    "schemas": {
+      "Health": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "SubmissionOut": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "submitted_by_agent": {
+            "title": "Submitted By Agent",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "upvote_count": {
+            "title": "Upvote Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "submitted_by_agent",
+          "upvote_count"
+        ],
+        "title": "SubmissionOut",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Catalog of agent-performable civic tasks, upvotes, and run traces.",
+    "title": "MA Agent Eval API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/healthz": {
+      "get": {
+        "description": "Liveness probe used by the Fly.io health check.",
+        "operationId": "config_api_healthz",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/submissions/": {
+      "get": {
+        "description": "Public, unauthenticated list of submissions ordered by newest first.",
+        "operationId": "maeval_submissions_views_list_submissions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubmissionOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "List Submissions",
+        "tags": [
+          "submissions"
+        ]
+      }
+    }
+  },
+  "servers": []
+}

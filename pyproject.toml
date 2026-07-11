@@ -1,0 +1,82 @@
+[project]
+name = "ma-agent-eval"
+version = "0.1.0"
+description = "Public catalog + eval harness for AI agents acting on Massachusetts civic services"
+requires-python = "==3.14.*"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "dj-database-url>=3.1.2",
+  "django>=6.0.7",
+  "django-environ>=0.14",
+  "django-ninja>=1.6.2",
+  "gunicorn>=26",
+  "psycopg[binary]>=3.3.4",
+  "python-ulid>=3.1",
+  "whitenoise>=6.12",
+]
+
+[dependency-groups]
+dev = [
+  "django-stubs",
+  "pre-commit",
+  "pyright",
+  "pytest",
+  "pytest-django",
+  "ruff",
+  "semgrep",
+  "tach",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+lint.select = [
+  "ARG",
+  "B",
+  "BLE",
+  "C4",
+  "DJ",
+  "DTZ",
+  "E",
+  "ERA",
+  "F",
+  "I",
+  "INP",
+  "N",
+  "PT",
+  "PTH",
+  "RET",
+  "RUF",
+  "S",
+  "SIM",
+  "T20",
+  "TC",
+  "TID",
+  "UP",
+]
+lint.per-file-ignores."**/migrations/**" = [ "ALL" ]  # generated
+lint.per-file-ignores."**/tests/**" = [ "ARG", "S101" ]  # asserts and fixture args are fine in tests
+lint.per-file-ignores."config/settings/*" = [
+  "F403",
+  "F405",
+  "S104",
+  "S105"
+]  # star-imports; dev/test bind-all + fixed test key (bandit-nosec'd)
+lint.per-file-ignores."scripts/**" = [ "RUF012", "S603", "S607", "T201" ]  # CLI dev tooling: prints + gh subprocess
+
+[tool.pyright]
+pythonVersion = "3.14"
+venv = ".venv"
+venvPath = "."
+exclude = [ "**/migrations", ".venv" ]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.pytest]
+ini_options.pythonpath = [ "." ]
+ini_options.addopts = "--strict-markers"
+ini_options.DJANGO_SETTINGS_MODULE = "config.settings.test"
