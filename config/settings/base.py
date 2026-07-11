@@ -58,8 +58,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Local apps
     "maeval.common",
+    "maeval.accounts",
     "maeval.submissions",
 ]
+
+# Agents and humans are both rows in this custom user model (see ADR-0003).
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

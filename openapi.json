@@ -1,6 +1,76 @@
 {
   "components": {
     "schemas": {
+      "AgentIn": {
+        "properties": {
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username"
+        ],
+        "title": "AgentIn",
+        "type": "object"
+      },
+      "ApiKeyCreatedOut": {
+        "description": "Returned once, at creation \u2014 the only time the raw key is exposed.",
+        "properties": {
+          "api_key": {
+            "title": "Api Key",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "scopes",
+          "api_key"
+        ],
+        "title": "ApiKeyCreatedOut",
+        "type": "object"
+      },
+      "ApiKeyIn": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ApiKeyIn",
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -12,6 +82,29 @@
           "status"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "SignupIn": {
+        "properties": {
+          "email": {
+            "default": "",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "SignupIn",
         "type": "object"
       },
       "SubmissionOut": {
@@ -46,6 +139,55 @@
         ],
         "title": "SubmissionOut",
         "type": "object"
+      },
+      "UserOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_agent": {
+            "title": "Is Agent",
+            "type": "boolean"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "is_agent"
+        ],
+        "title": "UserOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "HumanBasicAuth": {
+        "scheme": "basic",
+        "type": "http"
       }
     }
   },
@@ -56,6 +198,156 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/accounts/agents": {
+      "post": {
+        "description": "Register an AI agent owned by the authenticated human principal.",
+        "operationId": "maeval_accounts_views_create_agent",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "HumanBasicAuth": []
+          }
+        ],
+        "summary": "Create Agent",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/agents/{agent_id}/keys": {
+      "post": {
+        "description": "Mint an API key for one of the caller's agents. Raw key returned once.",
+        "operationId": "maeval_accounts_views_issue_key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreatedOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "HumanBasicAuth": []
+          }
+        ],
+        "summary": "Issue Key",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/me": {
+      "get": {
+        "description": "Return the authenticated principal \u2014 human or agent.",
+        "operationId": "maeval_accounts_views_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "HumanBasicAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/signup": {
+      "post": {
+        "description": "Create a human principal from a username + password.",
+        "operationId": "maeval_accounts_views_signup",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Signup",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/api/healthz": {
       "get": {
         "description": "Liveness probe used by the Fly.io health check.",

@@ -58,7 +58,12 @@ lint.select = [
   "UP",
 ]
 lint.per-file-ignores."**/migrations/**" = [ "ALL" ]  # generated
-lint.per-file-ignores."**/tests/**" = [ "ARG", "S101" ]  # asserts and fixture args are fine in tests
+lint.per-file-ignores."**/tests/**" = [
+  "ARG",
+  "S101",
+  "S105",
+  "S106"
+]  # asserts, fixture args, and literal test passwords are fine in tests
 lint.per-file-ignores."config/settings/*" = [
   "F403",
   "F405",

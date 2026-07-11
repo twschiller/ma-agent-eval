@@ -7,6 +7,7 @@ spectral lint hook.
 
 from ninja import NinjaAPI, Schema
 
+from maeval.accounts.views import router as accounts_router
 from maeval.submissions.views import router as submissions_router
 
 api = NinjaAPI(
@@ -26,4 +27,5 @@ def healthz(request) -> Health:  # noqa: ARG001  (Ninja passes the request)
     return Health(status="ok")
 
 
+api.add_router("/accounts", accounts_router)
 api.add_router("/submissions", submissions_router)

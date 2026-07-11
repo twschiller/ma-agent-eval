@@ -11,6 +11,22 @@ depends_on = []
 utility = true
 
 [[modules]]
+path = "maeval.accounts.models"
+depends_on = ["maeval.common"]
+
+[[modules]]
+path = "maeval.accounts.schemas"
+depends_on = ["maeval.accounts.models"]
+
+[[modules]]
+path = "maeval.accounts.auth"
+depends_on = ["maeval.accounts.models"]
+
+[[modules]]
+path = "maeval.accounts.views"
+depends_on = ["maeval.accounts.schemas", "maeval.accounts.auth", "maeval.accounts.models"]
+
+[[modules]]
 path = "maeval.submissions.models"
 depends_on = ["maeval.common"]
 
