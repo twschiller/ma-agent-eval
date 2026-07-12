@@ -44,6 +44,17 @@ repos:
       - id: markdownlint-cli2
         name: Lint Markdown files
 
+  - repo: https://github.com/djlint/djLint
+    rev: v1.40.5
+    hooks:
+      # Lint only (no --reformat): the web templates carry hand-tuned,
+      # significant whitespace the formatter would break — e.g. the leading
+      # space in `class="page{% block page_modifier %} page--narrow{% endblock %}"`.
+      # Config (profile, ignored rules) lives in [tool.djlint] in pyproject.toml.
+      - id: djlint-django
+        name: Lint Django templates (djLint)
+        files: ^maeval/web/templates/.*\.html$
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.21
     hooks:
