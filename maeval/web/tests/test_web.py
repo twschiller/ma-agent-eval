@@ -132,6 +132,9 @@ def test_llms_txt_served_as_plain_text(client: Client) -> None:
     assert "\n> " in body
     # Points agents at the API contract with an absolute link.
     assert "http://testserver/api/openapi.json" in body
+    # ...and at where they mint the API keys that contract requires (ADR-0009).
+    assert "http://testserver" + reverse("web:agent_list") in body
+    assert "http://testserver" + reverse("web:signup") in body
 
 
 # --- auth-gated write paths ----------------------------------------------

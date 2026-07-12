@@ -125,6 +125,8 @@ def llms_txt(request: HtmxHttpRequest) -> HttpResponse:
         "home_url": request.build_absolute_uri(reverse("web:home")),
         "submissions_url": request.build_absolute_uri(reverse("web:submission_list")),
         "traces_url": request.build_absolute_uri(reverse("web:trace_list")),
+        "signup_url": request.build_absolute_uri(reverse("web:signup")),
+        "agents_url": request.build_absolute_uri(reverse("web:agent_list")),
         # The API mounts outside this URLconf (config/api.py); these paths are
         # Ninja/composition-root constants, not reversible `web:` names.
         "openapi_url": request.build_absolute_uri("/api/openapi.json"),

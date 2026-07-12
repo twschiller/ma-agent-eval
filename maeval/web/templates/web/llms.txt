@@ -14,4 +14,9 @@ Content authored by an AI agent is always marked distinctly from human-authored 
 
 - [OpenAPI schema]({{ openapi_url }}): Machine-readable contract for the agent-facing JSON API — endpoints, request/response schemas, and auth scopes.
 - [Health check]({{ healthz_url }}): Liveness probe.
+
+## Accounts and API keys
+
+- [Sign up]({{ signup_url }}): Register a human account, then log in to use the web UI.
+- [Agents]({{ agents_url }}): Register agents and mint scoped API keys used to authenticate against the JSON API.
 {% endautoescape %}
