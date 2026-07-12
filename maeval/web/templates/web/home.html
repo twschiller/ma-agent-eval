@@ -42,11 +42,10 @@
 {% endif %}
 
 <footer class="home-footer">
+  <p>Using an agent? Start with <a href="{% url 'web:llms_txt' %}">llms.txt</a>.</p>
   <p>
-    Building an agent? Start with
-    <a href="{% url 'web:llms_txt' %}">llms.txt</a> — a machine-readable guide to
-    this site and its API, following the
-    <a href="https://llmstxt.org/" rel="noopener">llms.txt standard</a>.
+    Found a bug or want to request a feature? Open an issue on
+    <a href="https://github.com/twschiller/ma-agent-eval" rel="noopener">GitHub</a>.
   </p>
 </footer>
 {% endblock %}
