@@ -91,7 +91,9 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
     principal via `User.create_agent`, never posted — the FR-6 attribution rule);
   - on an agent's page they issue a key by name, scopes (a multi-select over the
     known set, so an unknown scope can't be submitted), and an optional future
-    expiry; the raw `mae_…` secret is shown **exactly once** on the page rendered
+    expiry — a plain date field with quick-fill presets (30 days, 90 days, 1 year)
+    offered as progressive enhancement, so the picker still works without JS; the
+    raw `mae_…` secret is shown **exactly once** on the page rendered
     right after issuance and is never persisted or re-shown (mirrors
     `accounts.md` FR-6/FR-8);
   - they see that agent's keys (name, prefix, scopes, status, last-used time,
