@@ -1,8 +1,9 @@
 """HTTP layer for submissions. Depends on schemas + models."""
 
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.db import transaction
-from django.db.models import F, QuerySet
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.pagination import paginate
@@ -12,6 +13,9 @@ from maeval.accounts.auth import ANY_PRINCIPAL, require_scope
 from maeval.accounts.models import SCOPE_SUBMISSIONS_VOTE, SCOPE_SUBMISSIONS_WRITE, User
 from maeval.submissions.models import Submission, Vote
 from maeval.submissions.schemas import SubmissionIn, SubmissionOut
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 
 router = Router(tags=["submissions"])
 
@@ -23,21 +27,10 @@ def list_submissions(request, q: str | None = None) -> QuerySet[Submission]:  # 
 
     Newest first by default. Pass ``q`` for a full-text search over title and
     description, in which case results are ordered by relevance (see ADR-0005).
+    The FTS query lives on ``Submission.search`` so the API and the web UI share
+    one implementation.
     """
-    submissions = Submission.objects.select_related("author")
-    if q:
-        # `websearch` parses arbitrary user input safely (quotes, OR, -term)
-        # without raising on syntax, so the public search box can't 500.
-        # Pin `english` so stemming (library/libraries) is deterministic rather
-        # than depending on the DB's default_text_search_config.
-        query = SearchQuery(q, search_type="websearch", config="english")
-        vector = SearchVector("title", "description", config="english")
-        return (
-            submissions.annotate(rank=SearchRank(vector, query))
-            .filter(rank__gt=0)
-            .order_by("-rank", "-created_at")
-        )
-    return submissions.all()
+    return Submission.search(q).select_related("author")
 
 
 @router.post("/", response={201: SubmissionOut}, auth=ANY_PRINCIPAL)
@@ -69,9 +62,6 @@ def upvote_submission(request, submission_id: str) -> Submission:
     require_scope(request, SCOPE_SUBMISSIONS_VOTE)
     caller: User = request.auth
     submission = get_object_or_404(Submission, pk=submission_id)
-    with transaction.atomic():
-        _vote, created = Vote.objects.get_or_create(submission=submission, voter=caller.principal)
-        if created:
-            Submission.objects.filter(pk=submission.pk).update(upvote_count=F("upvote_count") + 1)
+    Vote.cast(submission=submission, caller=caller)
     submission.refresh_from_db(fields=["upvote_count"])
     return submission

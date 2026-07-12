@@ -53,8 +53,10 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   parameter matching over `title` and `description` (Postgres FTS, stemmed).
   Results are ordered by relevance, then recency; a `q` that matches nothing
   returns an empty page (`items: []`, `count: 0`), never an error, even for
-  malformed input. Search shares FR-1's pagination envelope. See ADR-0005. —
-  `maeval/submissions/views.py:18`
+  malformed input. Search shares FR-1's pagination envelope. The matching query
+  lives on `Submission.search` so the API and the web UI (`web.md`) share one FTS
+  implementation. See ADR-0005. — `maeval/submissions/views.py:18`,
+  `maeval/submissions/models.py:45`
 
 ## Out of scope
 

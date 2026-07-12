@@ -567,7 +567,7 @@
     },
     "/api/submissions/": {
       "get": {
-        "description": "Public, unauthenticated, LimitOffset-paginated list of submissions.\n\nNewest first by default. Pass ``q`` for a full-text search over title and\ndescription, in which case results are ordered by relevance (see ADR-0005).",
+        "description": "Public, unauthenticated, LimitOffset-paginated list of submissions.\n\nNewest first by default. Pass ``q`` for a full-text search over title and\ndescription, in which case results are ordered by relevance (see ADR-0005).\nThe FTS query lives on ``Submission.search`` so the API and the web UI share\none implementation.",
         "operationId": "maeval_submissions_views_list_submissions",
         "parameters": [
           {

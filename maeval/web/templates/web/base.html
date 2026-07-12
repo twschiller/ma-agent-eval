@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MA Agent Eval{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'web/vendor/bootstrap.min.css' %}">
+</head>
+{# CSRF token is sent on every htmx request (upvote, live search POSTs). #}
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'web:home' %}">MA Agent Eval</a>
+      <div class="navbar-nav me-auto">
+        <a class="nav-link" href="{% url 'web:submission_list' %}">Submissions</a>
+        <a class="nav-link" href="{% url 'web:trace_list' %}">Run traces</a>
+      </div>
+      <div class="navbar-nav">
+        {% if user.is_authenticated %}
+          <a class="nav-link" href="{% url 'web:submission_create' %}">New submission</a>
+          <span class="navbar-text mx-2">{{ user.username }}</span>
+          <form method="post" action="{% url 'web:logout' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-light">Log out</button>
+          </form>
+        {% else %}
+          <a class="nav-link" href="{% url 'web:login' %}">Log in</a>
+          <a class="nav-link" href="{% url 'web:signup' %}">Sign up</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'web/vendor/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'web/vendor/htmx.min.js' %}"></script>
+</body>
+</html>

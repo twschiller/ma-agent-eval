@@ -1,0 +1,55 @@
+{% comment %}
+Results fragment for the submissions list — the htmx swap target (#results).
+Rendered standalone on an htmx request, or included by submission_list.html.
+{% endcomment %}
+{% if page_obj.paginator.count %}
+  <p class="text-muted small">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</p>
+  <div class="list-group mb-3">
+    {% for submission in page_obj %}
+      <a class="list-group-item list-group-item-action"
+         href="{% url 'web:submission_detail' submission.id %}">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-semibold">
+              {{ submission.title }}
+              {% if submission.submitted_by_agent %}
+                <span class="badge text-bg-info">agent</span>
+              {% endif %}
+            </div>
+            {% if submission.description %}
+              <div class="text-muted small">{{ submission.description|truncatewords:25 }}</div>
+            {% endif %}
+            <div class="text-muted small">by {{ submission.author.username|default:"anonymous" }}</div>
+          </div>
+          <span class="badge text-bg-secondary rounded-pill ms-2">&#9650; {{ submission.upvote_count }}</span>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Submissions pages">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}"
+               hx-get="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}"
+               hx-target="#results" hx-push-url="true">Previous</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}"
+               hx-get="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}"
+               hx-target="#results" hx-push-url="true">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% else %}
+  <p class="text-muted">No submissions{% if q %} match &ldquo;{{ q }}&rdquo;{% endif %}.</p>
+{% endif %}

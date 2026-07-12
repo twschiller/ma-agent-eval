@@ -1,0 +1,19 @@
+{% comment %}
+Upvote control — its own htmx swap target (#upvote). The POST view returns this
+same fragment so the button and count refresh in place. Anonymous visitors get a
+link to log in instead of a POST button.
+{% endcomment %}
+<div id="upvote" class="d-inline-flex align-items-center gap-2">
+  {% if user.is_authenticated %}
+    <button class="btn btn-sm btn-outline-primary"
+            hx-post="{% url 'web:submission_upvote' submission.id %}"
+            hx-target="#upvote" hx-swap="outerHTML"
+            {% if has_voted %}disabled title="You have upvoted this"{% endif %}>
+      &#9650; Upvote
+    </button>
+  {% else %}
+    <a class="btn btn-sm btn-outline-primary"
+       href="{% url 'web:login' %}?next={{ request.path|urlencode }}">&#9650; Upvote</a>
+  {% endif %}
+  <span class="badge text-bg-secondary rounded-pill">{{ submission.upvote_count }}</span>
+</div>

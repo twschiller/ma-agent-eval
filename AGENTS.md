@@ -33,15 +33,19 @@ config/                 # composition root: settings/, api.py, urls, asgi/wsgi
 maeval/                 # domain apps
   common/               # shared infra (ULID-pk TimestampedModel) — import anywhere
   submissions/          # one app per domain: models -> schemas -> views
+  web/                  # human-facing server-rendered UI (templates+htmx+Bootstrap)
 tools/                  # standalone scripts (export_openapi.py)
 docs/decisions/         # ADRs (MADR-minimal), README.md index
 docs/requirements/      # golden specs, one per behavioral area
 .semgrep/               # project static-analysis rules (add incrementally)
 ```
 
-Each app is layered `views -> schemas -> models` (Ninja routers live in
+Each API app is layered `views -> schemas -> models` (Ninja routers live in
 `views.py`, mounted in `config/api.py`); `tach.toml` enforces it. No per-app
-`urls.py`.
+`urls.py` — *except* `maeval/web`, the human-facing UI (ADR-0006), which has no
+Ninja router and so owns a namespaced `urls.py` included at the site root. The
+web app renders existing domains as HTML (templates+htmx+Bootstrap 5) and is
+absent from the OpenAPI contract; humans use session login, agents use API keys.
 
 ## Commands
 
