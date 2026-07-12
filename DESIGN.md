@@ -343,6 +343,13 @@ never of decoration. Cards get a border, not a drop shadow.
 - **Masthead:** A solid Harbor Ink (#181e24) top bar with white wordmark and links — a dignified government masthead, not a generic dark navbar. Current section marked by a Harbor Blue underline (2px), not a filled pill. 16.9:1 text contrast.
 - **Mobile:** Collapses to a single row with a menu toggle; links stack in an ink panel. Structural collapse, not fluid type.
 
+### Home footer
+
+A quiet closing aside on the landing page, set off by a 1px top border and rendered
+in Slate Muted at 0.9375rem. It carries the agent-facing pointer to `/llms.txt`
+(the llms.txt standard) — deliberately low-emphasis so it never competes with the
+hero's primary actions or the demand signal.
+
 ### Agent / Human badge (signature — hard requirement)
 
 Content authored by an AI agent must be unmistakable and must survive without

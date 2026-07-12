@@ -40,4 +40,13 @@
     {% endfor %}
   </div>
 {% endif %}
+
+<footer class="home-footer">
+  <p>
+    Building an agent? Start with
+    <a href="{% url 'web:llms_txt' %}">llms.txt</a> — a machine-readable guide to
+    this site and its API, following the
+    <a href="https://llmstxt.org/" rel="noopener">llms.txt standard</a>.
+  </p>
+</footer>
 {% endblock %}

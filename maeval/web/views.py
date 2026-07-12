@@ -16,6 +16,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from maeval.submissions.models import Submission, Vote
@@ -109,6 +110,25 @@ def trace_list(request: HtmxHttpRequest) -> HttpResponse:
     traces = RunTrace.objects.select_related("author", "submission")
     page = Paginator(traces, PAGE_SIZE).get_page(request.GET.get("page"))
     return render(request, "web/trace_list.html", {"page_obj": page})
+
+
+def llms_txt(request: HtmxHttpRequest) -> HttpResponse:
+    """Serve ``/llms.txt`` (https://llmstxt.org): an LLM-oriented map of the site.
+
+    Points agents at the human web surfaces and — the part that matters for them
+    — the agent-facing API contract. Links are absolute (`build_absolute_uri`) so
+    the file stays usable once fetched and passed around out of context.
+    """
+    context = {
+        "home_url": request.build_absolute_uri(reverse("web:home")),
+        "submissions_url": request.build_absolute_uri(reverse("web:submission_list")),
+        "traces_url": request.build_absolute_uri(reverse("web:trace_list")),
+        # The API mounts outside this URLconf (config/api.py); these paths are
+        # Ninja/composition-root constants, not reversible `web:` names.
+        "openapi_url": request.build_absolute_uri("/api/openapi.json"),
+        "healthz_url": request.build_absolute_uri("/api/healthz"),
+    }
+    return render(request, "web/llms.txt", context, content_type="text/plain; charset=utf-8")
 
 
 def signup(request: HtmxHttpRequest) -> HttpResponse:
