@@ -51,7 +51,8 @@ def payload(submission: Submission, **overrides: object) -> dict[str, object]:
 def test_list_traces_empty(client: Client) -> None:
     response = client.get("/api/traces/")
     assert response.status_code == 200
-    assert response.json() == []
+    # LimitOffset page envelope, empty (FR-1).
+    assert response.json() == {"items": [], "count": 0}
 
 
 @pytest.mark.django_db
@@ -66,13 +67,15 @@ def test_list_traces_returns_created(client: Client) -> None:
     )
     response = client.get("/api/traces/")
     body = response.json()
-    assert len(body) == 1
-    assert body[0]["model"] == "claude-opus-4-8"
-    assert body[0]["harness"] == "claude-code"
-    assert body[0]["tools"] == ["library-mcp"]
-    assert body[0]["outcome"] == "partial"
-    assert body[0]["submitted_by_agent"] is False
-    assert body[0]["author"] is None
+    assert body["count"] == 1
+    items = body["items"]
+    assert len(items) == 1
+    assert items[0]["model"] == "claude-opus-4-8"
+    assert items[0]["harness"] == "claude-code"
+    assert items[0]["tools"] == ["library-mcp"]
+    assert items[0]["outcome"] == "partial"
+    assert items[0]["submitted_by_agent"] is False
+    assert items[0]["author"] is None
 
 
 @pytest.mark.django_db
@@ -87,8 +90,21 @@ def test_list_traces_filters_by_submission(client: Client) -> None:
     )
     response = client.get("/api/traces/", {"submission_id": library.pk})
     body = response.json()
-    assert len(body) == 1
-    assert body[0]["submission_id"] == library.pk
+    assert body["count"] == 1
+    assert body["items"][0]["submission_id"] == library.pk
+
+
+@pytest.mark.django_db
+def test_list_traces_paginates_with_limit_offset(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    for _ in range(3):
+        RunTrace.objects.create(
+            submission=submission, model="m", harness="h", outcome=RunTrace.Outcome.SUCCESS
+        )
+    page = client.get("/api/traces/?limit=2&offset=0").json()
+    assert page["count"] == 3  # total, not the page size
+    assert len(page["items"]) == 2
+    assert len(client.get("/api/traces/?limit=2&offset=2").json()["items"]) == 1
 
 
 # --- create ---------------------------------------------------------------
