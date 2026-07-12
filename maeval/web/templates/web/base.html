@@ -30,11 +30,25 @@
       <nav class="site-nav" aria-label="Account">
         {% if user.is_authenticated %}
           <a class="site-nav__link" href="{% url 'web:submission_create' %}">New submission</a>
-          <span class="site-header__user">{{ user.username }}</span>
-          <form method="post" action="{% url 'web:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="button button--secondary button--sm">Log out</button>
-          </form>
+          {# Account menu: a JS-free <details> disclosure — the summary is the
+             trigger, the panel floats below (the one place a shadow is allowed,
+             DESIGN.md §4). A small script closes it on outside-click/Escape. #}
+          <details class="menu" data-menu>
+            <summary class="menu__trigger">
+              <span class="site-header__user">{{ user.username }}</span>
+              <svg class="menu__caret" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4"
+                      fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="menu__panel" role="menu">
+              <a class="menu__item" role="menuitem" href="{% url 'web:agent_list' %}">API keys</a>
+              <form method="post" action="{% url 'web:logout' %}" role="none">
+                {% csrf_token %}
+                <button type="submit" class="menu__item menu__item--button" role="menuitem">Log out</button>
+              </form>
+            </div>
+          </details>
         {% else %}
           <a class="site-nav__link" href="{% url 'web:login' %}"
              {% if active == 'login' %}aria-current="page"{% endif %}>Log in</a>
@@ -57,5 +71,19 @@
 
   <script src="{% static 'web/vendor/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'web/vendor/htmx.min.js' %}"></script>
+  <script>
+    // Close any open account menu when clicking away or pressing Escape.
+    document.addEventListener("click", function (event) {
+      document.querySelectorAll("details[data-menu][open]").forEach(function (menu) {
+        if (!menu.contains(event.target)) { menu.open = false; }
+      });
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") { return; }
+      document.querySelectorAll("details[data-menu][open]").forEach(function (menu) {
+        menu.open = false;
+      });
+    });
+  </script>
 </body>
 </html>

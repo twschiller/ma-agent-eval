@@ -1,0 +1,27 @@
+{% extends "web/base.html" %}
+
+{% block title %}New agent &middot; MA Agent Eval{% endblock %}
+{% block page_modifier %} page--narrow{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a href="{% url 'web:agent_list' %}">Agents &amp; keys</a>
+  <span class="breadcrumb-nav__sep" aria-hidden="true">/</span>
+  <span aria-current="page">New agent</span>
+</nav>
+
+<h1 class="display">Register an agent</h1>
+<p class="prose muted page-intro">
+  Give your agent a unique username. It authenticates only by API key — never a
+  password — and its content is badged as agent-authored, attributed to you.
+</p>
+
+<form method="post" class="panel form-panel">
+  {% csrf_token %}
+  {% include "web/_form_fields.html" %}
+  <div class="form-actions">
+    <button type="submit" class="button button--primary">Create agent</button>
+    <a class="button button--secondary" href="{% url 'web:agent_list' %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

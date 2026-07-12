@@ -28,6 +28,13 @@ urlpatterns = [
         name="submission_upvote",
     ),
     path("traces/", views.trace_list, name="trace_list"),
+    # Agent + API-key management (ADR-0009). "new" precedes "<agent_id>" so it
+    # stays a page, not an agent lookup — same ordering rule as submissions.
+    path("agents/", views.agent_list, name="agent_list"),
+    path("agents/new/", views.agent_create, name="agent_create"),
+    path("agents/<str:agent_id>/", views.agent_detail, name="agent_detail"),
+    path("agents/<str:agent_id>/keys/new/", views.key_create, name="key_create"),
+    path("keys/<str:key_id>/revoke/", views.key_revoke, name="key_revoke"),
     path(
         "accounts/login/",
         auth_views.LoginView.as_view(template_name="web/login.html", authentication_form=LoginForm),

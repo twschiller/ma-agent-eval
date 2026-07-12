@@ -12,22 +12,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Count, Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from maeval.accounts.models import ApiKey, User
 from maeval.submissions.models import Submission, Vote
 from maeval.traces.models import RunTrace
-from maeval.web.forms import SignupForm, SubmissionForm
+from maeval.web.forms import AgentForm, ApiKeyForm, SignupForm, SubmissionForm
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
     from django_htmx.middleware import HtmxDetails
-
-    from maeval.accounts.models import User
 
     class HtmxHttpRequest(HttpRequest):
         """The request as seen by these views: HtmxMiddleware adds ``htmx``."""
@@ -145,3 +147,101 @@ def signup(request: HtmxHttpRequest) -> HttpResponse:
     else:
         form = SignupForm()
     return render(request, "web/signup.html", {"form": form})
+
+
+# --- agent + API-key management (ADR-0009) --------------------------------
+#
+# The browser self-serve surface for what the API also offers: a human registers
+# agents and issues them scoped keys. Views reuse the model helpers
+# (`User.create_agent`, `ApiKey.issue`, `ApiKey.revoke`) so behavior can't drift
+# from the API. Ownership is scoped to `request.user` on every lookup — a human
+# only ever sees or touches their own agents' keys.
+
+
+@login_required
+def agent_list(request: HtmxHttpRequest) -> HttpResponse:
+    """List the logged-in human's agents and how many live keys each holds."""
+    human = cast("User", request.user)
+    now = timezone.now()
+    live = Q(api_keys__revoked_at__isnull=True) & (
+        Q(api_keys__expires_at__isnull=True) | Q(api_keys__expires_at__gt=now)
+    )
+    agents = (
+        User.objects.filter(parent=human, is_agent=True)
+        .annotate(
+            key_count=Count("api_keys", distinct=True),
+            active_key_count=Count("api_keys", filter=live, distinct=True),
+            # Most recent authentication across all of the agent's keys; null
+            # until one is used (last_used_at is stamped by ApiKeyAuth).
+            last_active_at=Max("api_keys__last_used_at"),
+        )
+        .order_by("username")
+    )
+    return render(request, "web/agent_list.html", {"agents": agents})
+
+
+@login_required
+def agent_create(request: HtmxHttpRequest) -> HttpResponse:
+    """Register an agent owned by the logged-in human."""
+    human = cast("User", request.user)
+    if request.method == "POST":
+        form = AgentForm(request.POST)
+        if form.is_valid():
+            agent = User.create_agent(username=form.cleaned_data["username"], parent=human)
+            messages.success(request, f"Agent “{agent.username}” registered.")
+            return redirect("web:agent_detail", agent_id=agent.pk)
+    else:
+        form = AgentForm()
+    return render(request, "web/agent_form.html", {"form": form})
+
+
+def _get_owned_agent(request: HtmxHttpRequest, agent_id: str) -> User:
+    """The caller's agent by id, or 404 — never another human's agent."""
+    return get_object_or_404(User, pk=agent_id, parent=cast("User", request.user), is_agent=True)
+
+
+@login_required
+def agent_detail(request: HtmxHttpRequest, agent_id: str) -> HttpResponse:
+    """One agent and its API keys (metadata only — secrets are never stored)."""
+    agent = _get_owned_agent(request, agent_id)
+    keys = ApiKey.objects.filter(agent=agent)  # ApiKey.Meta orders newest-first
+    return render(request, "web/agent_detail.html", {"agent": agent, "keys": keys})
+
+
+@login_required
+def key_create(request: HtmxHttpRequest, agent_id: str) -> HttpResponse:
+    """Issue a key for the caller's agent; show the raw token exactly once."""
+    agent = _get_owned_agent(request, agent_id)
+    if request.method == "POST":
+        form = ApiKeyForm(request.POST)
+        if form.is_valid():
+            key, raw = ApiKey.issue(
+                agent=agent,
+                name=form.cleaned_data["name"],
+                scopes=form.cleaned_data["scopes"],
+                expires_at=form.cleaned_data["expires_at"],
+            )
+            # Rendered inline (not redirected): the raw secret lives only in this
+            # one response and is never persisted or re-derivable.
+            return render(
+                request,
+                "web/key_created.html",
+                {"agent": agent, "key": key, "raw_key": raw},
+            )
+    else:
+        form = ApiKeyForm()
+    return render(request, "web/key_form.html", {"agent": agent, "form": form})
+
+
+@require_POST
+@login_required
+def key_revoke(request: HtmxHttpRequest, key_id: str) -> HttpResponse:
+    """Revoke one of the caller's keys (404 for a key that isn't theirs)."""
+    key = get_object_or_404(
+        ApiKey.objects.select_related("agent"),
+        pk=key_id,
+        agent__parent=cast("User", request.user),
+    )
+    key.revoke()
+    messages.success(request, f"Key “{key.name}” revoked.")
+    return redirect("web:agent_detail", agent_id=key.agent.pk)

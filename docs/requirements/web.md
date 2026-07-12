@@ -78,13 +78,31 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   web surfaces and the agent-facing API (OpenAPI schema, health check), with
   absolute links. The home page links to it. — `maeval/web/views.py:114`,
   `maeval/web/urls.py:19`, `maeval/web/templates/web/llms.txt`
+- FR-10. A logged-in human manages their agents and API keys from the browser
+  (ADR-0009), reached from the masthead account menu (username → "API keys").
+  Every lookup is scoped to the caller — an agent or key that isn't theirs is
+  a Not Found — and this surface is session-only, absent from the OpenAPI
+  contract. — `maeval/web/views.py` (`agent_list`, `agent_create`,
+  `agent_detail`, `key_create`, `key_revoke`), `maeval/web/forms.py`
+  (`AgentForm`, `ApiKeyForm`). Specifically:
+  - they see a list of *their* agents, each with its live-key count and when it
+    was last active (the most recent key use, or "never used"), and can register
+    a new agent (username only; `is_agent`/`parent` are set from the session
+    principal via `User.create_agent`, never posted — the FR-6 attribution rule);
+  - on an agent's page they issue a key by name, scopes (a multi-select over the
+    known set, so an unknown scope can't be submitted), and an optional future
+    expiry; the raw `mae_…` secret is shown **exactly once** on the page rendered
+    right after issuance and is never persisted or re-shown (mirrors
+    `accounts.md` FR-6/FR-8);
+  - they see that agent's keys (name, prefix, scopes, status, last-used time,
+    expiry — metadata only; `last_used_at` is stamped on every successful bearer
+    auth, `accounts.md` FR-3) and can revoke an active key, which stops it
+    authenticating at once (`ApiKey.revoke`, `accounts.md` FR-6a).
 
 ## Out of scope
 
 - The agent-facing OpenAPI contract — the web UI is human-only HTML and does not
   appear in `openapi.json` (see `submissions.md`, `traces.md`, `accounts.md`).
-- Browser-based agent registration / API-key issuance — done through the API
-  (`accounts.md`); not mirrored in HTML.
 - Recording a run trace from the browser — traces are written via the API
   (`traces.md`); the web UI only displays them.
 - Visual design / theming — intentionally minimal (Bootstrap defaults) until a
@@ -99,4 +117,3 @@ Only items with a backing issue or ADR.
 
 - Editing / retracting a submission or vote from the browser — TBD (tracks the
   same gap as `submissions.md`).
-- Browser-based agent + API-key management — TBD.

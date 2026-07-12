@@ -77,7 +77,8 @@ depends_on = [
     "maeval.web.forms",
     "maeval.submissions.models",
     "maeval.traces.models",
-    # Type-only: `request.user` is cast to the identity model for attribution.
+    # Identity model: agent/key management reuses `User.create_agent`,
+    # `ApiKey.issue`/`revoke` (ADR-0009); also the attribution cast on request.user.
     "maeval.accounts.models",
 ]
 

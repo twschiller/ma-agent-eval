@@ -57,6 +57,12 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   to secret scanners). Unknown scopes are rejected (422). —
   `maeval/accounts/views.py` (`issue_key`), `maeval/accounts/models.py`
   (`ApiKey.issue`)
+- FR-6a. A key can be revoked, which stops it authenticating immediately and
+  permanently. `ApiKey.revoke` is idempotent (a no-op on an already-revoked key,
+  so a double-submit can't move the timestamp); `resolve` already excludes
+  revoked keys, so it stays the single arbiter of whether a key is live. Exposed
+  to humans through the web UI (`web.md` FR-10); no API revoke endpoint yet (see
+  Future work). — `maeval/accounts/models.py` (`ApiKey.revoke`, `resolve`)
 - FR-7. Keys carry scopes from a known set (`submissions:write`,
   `submissions:vote`, `traces:write`); a revoked *or* expired key no longer
   authenticates. — `maeval/accounts/models.py` (`SCOPES`, `ApiKey.resolve`)
@@ -85,7 +91,9 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 
 Only items with a backing issue or ADR.
 
-- Key revocation and listing endpoints (issue/list/revoke lifecycle) — TBD.
+- **API** endpoints for listing and revoking keys — TBD. The lifecycle exists at
+  the model (`ApiKey.issue`/`revoke`) and in the web UI (`web.md` FR-10, ADR-0009);
+  the agent-facing API still only issues (FR-6), not list/revoke.
 - Signup rate limiting / abuse controls (axes covers auth failures, not new-account
   creation). An invite-code gate (`SIGNUP_INVITE_CODE`, ADR-0008, `web.md` FR-5a)
   restricts *who* can sign up for the trial, but is not a rate limit — TBD.

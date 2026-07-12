@@ -160,6 +160,21 @@ def test_revoked_key_does_not_resolve(client: Client) -> None:
     assert ApiKey.resolve(raw) is None
 
 
+@pytest.mark.django_db
+def test_revoke_stops_resolution_and_is_idempotent(client: Client) -> None:
+    human = User.objects.create_user(username="alice", password=PASSWORD)
+    agent = User.create_agent(username="alice-bot", parent=human)
+    key, raw = ApiKey.issue(agent=agent, name="ci", scopes=[])
+    key.revoke()
+    assert key.revoked_at is not None
+    assert ApiKey.resolve(raw) is None
+    # A second revoke is a no-op — it must not move the timestamp.
+    first = key.revoked_at
+    key.revoke()
+    key.refresh_from_db()
+    assert key.revoked_at == first
+
+
 # --- API-key expiry -------------------------------------------------------
 
 
