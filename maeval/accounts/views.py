@@ -1,11 +1,15 @@
-"""HTTP layer for accounts: signup, agent creation, API-key issuance, /me.
+"""HTTP layer for accounts: agent creation, API-key issuance, /me.
+
+Human signup is deliberately absent from this agent-facing API — it is a
+session-authenticated, human-only flow served by the web app (`maeval/web`,
+`signup`) and is not part of the OpenAPI contract. Agents are created here by an
+already-authenticated human, never self-registered.
 
 Depends on schemas, auth, and models. `submitted_by_agent`-style attribution is
 never taken from a request body here — it is derived from the authenticated
 principal by the auth layer.
 """
 
-from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from ninja import Router
@@ -18,26 +22,10 @@ from maeval.accounts.schemas import (
     AgentIn,
     ApiKeyCreatedOut,
     ApiKeyIn,
-    SignupIn,
     UserOut,
 )
 
 router = Router(tags=["accounts"])
-
-
-@router.post("/signup", response={201: UserOut}, auth=None)
-def signup(request, payload: SignupIn) -> Status[User]:  # noqa: ARG001
-    """Create a human principal from a username + password."""
-    if User.objects.filter(username=payload.username).exists():
-        raise HttpError(409, "username already taken")
-    try:
-        validate_password(payload.password)
-    except ValidationError as exc:
-        raise HttpError(422, "; ".join(exc.messages)) from exc
-    user = User.objects.create_user(
-        username=payload.username, password=payload.password, email=payload.email
-    )
-    return Status(201, user)
 
 
 @router.get("/me", response=UserOut, auth=ANY_PRINCIPAL)

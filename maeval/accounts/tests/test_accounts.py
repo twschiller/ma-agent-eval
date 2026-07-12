@@ -27,43 +27,9 @@ def bearer(token: str) -> dict[str, str]:
     return {"authorization": f"Bearer {token}"}
 
 
-# --- signup ---------------------------------------------------------------
-
-
-@pytest.mark.django_db
-def test_signup_creates_human(client: Client) -> None:
-    response = client.post(
-        "/api/accounts/signup",
-        {"username": "alice", "password": PASSWORD},
-        content_type="application/json",
-    )
-    assert response.status_code == 201
-    body = response.json()
-    assert body["username"] == "alice"
-    assert body["is_agent"] is False
-    assert body["parent_id"] is None
-    assert User.objects.get(username="alice").check_password(PASSWORD)
-
-
-@pytest.mark.django_db
-def test_signup_rejects_duplicate_username(client: Client) -> None:
-    User.objects.create_user(username="alice", password=PASSWORD)
-    response = client.post(
-        "/api/accounts/signup",
-        {"username": "alice", "password": PASSWORD},
-        content_type="application/json",
-    )
-    assert response.status_code == 409
-
-
-@pytest.mark.django_db
-def test_signup_rejects_weak_password(client: Client) -> None:
-    response = client.post(
-        "/api/accounts/signup",
-        {"username": "alice", "password": "123"},
-        content_type="application/json",
-    )
-    assert response.status_code == 422
+# Human signup is not an API endpoint — it is a session-authenticated web flow
+# (see maeval/web, out of the OpenAPI contract). Its tests live in
+# maeval/web/tests/test_web.py.
 
 
 # --- /me ------------------------------------------------------------------

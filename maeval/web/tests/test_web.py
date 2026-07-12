@@ -188,6 +188,31 @@ def test_signup_creates_human_and_logs_in(client: Client) -> None:
 
 
 @pytest.mark.django_db
+def test_signup_rejects_duplicate_username(client: Client) -> None:
+    User.objects.create_user(username="bob", password=PASSWORD)
+    response = client.post(
+        reverse("web:signup"),
+        {"username": "bob", "password1": PASSWORD, "password2": PASSWORD},
+    )
+    # Form re-renders with an error rather than creating a second account.
+    assert response.status_code == 200
+    assert User.objects.filter(username="bob").count() == 1
+    assert "_auth_user_id" not in client.session
+
+
+@pytest.mark.django_db
+def test_signup_rejects_weak_password(client: Client) -> None:
+    response = client.post(
+        reverse("web:signup"),
+        {"username": "bob", "password1": "123", "password2": "123"},
+    )
+    # Django's AUTH_PASSWORD_VALIDATORS reject the weak password; form re-renders.
+    assert response.status_code == 200
+    assert not User.objects.filter(username="bob").exists()
+    assert "_auth_user_id" not in client.session
+
+
+@pytest.mark.django_db
 def test_login_flow(client: Client, human: User) -> None:
     response = client.post(reverse("web:login"), {"username": "alice", "password": PASSWORD})
     assert response.status_code == 302
