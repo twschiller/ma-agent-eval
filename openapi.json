@@ -84,6 +84,15 @@
         "title": "Health",
         "type": "object"
       },
+      "Outcome": {
+        "enum": [
+          "success",
+          "partial",
+          "failed"
+        ],
+        "title": "Outcome",
+        "type": "string"
+      },
       "SignupIn": {
         "properties": {
           "email": {
@@ -169,6 +178,99 @@
           "upvote_count"
         ],
         "title": "SubmissionOut",
+        "type": "object"
+      },
+      "TraceIn": {
+        "description": "Create payload. `submitted_by_agent`/`author` are derived from the\nauthenticated caller, never accepted from the body; `submission_id`\nidentifies the task the run attempted.",
+        "properties": {
+          "harness": {
+            "maxLength": 200,
+            "title": "Harness",
+            "type": "string"
+          },
+          "model": {
+            "maxLength": 200,
+            "title": "Model",
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "submission_id": {
+            "title": "Submission Id",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "submission_id",
+          "model",
+          "harness",
+          "outcome"
+        ],
+        "title": "TraceIn",
+        "type": "object"
+      },
+      "TraceOut": {
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "harness": {
+            "title": "Harness",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "submission_id": {
+            "title": "Submission Id",
+            "type": "string"
+          },
+          "submitted_by_agent": {
+            "title": "Submitted By Agent",
+            "type": "boolean"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "submission_id",
+          "model",
+          "harness",
+          "tools",
+          "outcome",
+          "submitted_by_agent"
+        ],
+        "title": "TraceOut",
         "type": "object"
       },
       "UserOut": {
@@ -506,6 +608,89 @@
         "summary": "Upvote Submission",
         "tags": [
           "submissions"
+        ]
+      }
+    },
+    "/api/traces/": {
+      "get": {
+        "description": "Public, unauthenticated list of run traces, newest first.\n\nPass ``submission_id`` to see only the runs recorded against one task.",
+        "operationId": "maeval_traces_views_list_traces",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "submission_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Submission Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TraceOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "List Traces",
+        "tags": [
+          "traces"
+        ]
+      },
+      "post": {
+        "description": "Record a run trace attributed to the authenticated principal.\n\nAn agent needs the ``traces:write`` scope; a human is unrestricted.\n``submitted_by_agent`` is derived from the caller, not the request body.",
+        "operationId": "maeval_traces_views_create_trace",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "HumanBasicAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Create Trace",
+        "tags": [
+          "traces"
         ]
       }
     }

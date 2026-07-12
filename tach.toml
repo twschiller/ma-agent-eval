@@ -45,5 +45,25 @@ depends_on = [
     "maeval.accounts.models",
 ]
 
+[[modules]]
+path = "maeval.traces.models"
+depends_on = ["maeval.common", "maeval.submissions.models"]
+
+[[modules]]
+path = "maeval.traces.schemas"
+depends_on = ["maeval.traces.models"]
+
+[[modules]]
+path = "maeval.traces.views"
+depends_on = [
+    "maeval.traces.schemas",
+    "maeval.traces.models",
+    # A trace is recorded against a submission, and the write path authenticates
+    # principals and enforces API-key scopes via the accounts auth contract.
+    "maeval.submissions.models",
+    "maeval.accounts.auth",
+    "maeval.accounts.models",
+]
+
 [cache]
 backend = "disk"
