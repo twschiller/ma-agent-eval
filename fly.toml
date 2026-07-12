@@ -1,4 +1,4 @@
-# fly.toml — Fly.io app config. One app, scale-to-zero, Neon for Postgres.
+# fly.toml — Fly.io app config. One always-warm machine, Neon for Postgres.
 # Bootstrap:
 #   fly launch --no-deploy          # creates the app, then edit this file
 #   fly secrets set DATABASE_URL='postgres://USER:PASS@HOST.neon.tech/DB?sslmode=require'
@@ -23,7 +23,7 @@ primary_region = "iad"
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
 
   [[http_service.checks]]
     grace_period = "10s"
