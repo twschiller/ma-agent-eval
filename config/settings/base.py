@@ -57,6 +57,11 @@ SECRET_KEY = env_str("DJANGO_SECRET_KEY", "insecure-dev-only-change-me")
 DEBUG = env_bool("DJANGO_DEBUG")
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", ["localhost", "127.0.0.1"])
 
+# Invite-only signup gate. When set, the web signup form requires a matching
+# code; when empty (the default), signup is open. Rotate by changing the secret.
+# See web.md FR-5 and ADR-0008.
+SIGNUP_INVITE_CODE = env_str("SIGNUP_INVITE_CODE", "")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

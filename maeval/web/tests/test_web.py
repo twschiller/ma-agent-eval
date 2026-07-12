@@ -8,7 +8,7 @@ HTML layer and that attribution/vote semantics match via the shared helpers.
 from urllib.parse import urlencode
 
 import pytest
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 from maeval.accounts.models import User
@@ -229,6 +229,52 @@ def test_signup_rejects_weak_password(client: Client) -> None:
     assert response.status_code == 200
     assert not User.objects.filter(username="bob").exists()
     assert "_auth_user_id" not in client.session
+
+
+@pytest.mark.django_db
+@override_settings(SIGNUP_INVITE_CODE="let-me-in")
+def test_signup_requires_invite_code_when_set(client: Client) -> None:
+    response = client.post(
+        reverse("web:signup"),
+        {"username": "bob", "password1": PASSWORD, "password2": PASSWORD},
+    )
+    # No code supplied while the gate is on: form re-renders, no account created.
+    assert response.status_code == 200
+    assert not User.objects.filter(username="bob").exists()
+    assert "_auth_user_id" not in client.session
+
+
+@pytest.mark.django_db
+@override_settings(SIGNUP_INVITE_CODE="let-me-in")
+def test_signup_rejects_wrong_invite_code(client: Client) -> None:
+    response = client.post(
+        reverse("web:signup"),
+        {
+            "username": "bob",
+            "password1": PASSWORD,
+            "password2": PASSWORD,
+            "invite_code": "nope",
+        },
+    )
+    assert response.status_code == 200
+    assert not User.objects.filter(username="bob").exists()
+
+
+@pytest.mark.django_db
+@override_settings(SIGNUP_INVITE_CODE="let-me-in")
+def test_signup_accepts_correct_invite_code(client: Client) -> None:
+    response = client.post(
+        reverse("web:signup"),
+        {
+            "username": "bob",
+            "password1": PASSWORD,
+            "password2": PASSWORD,
+            "invite_code": "let-me-in",
+        },
+    )
+    assert response.status_code == 302
+    assert User.objects.filter(username="bob").exists()
+    assert "_auth_user_id" in client.session
 
 
 @pytest.mark.django_db

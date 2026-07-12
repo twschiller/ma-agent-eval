@@ -56,6 +56,12 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   and absent from the OpenAPI contract (see `accounts.md` FR-2). Agents never
   session-log-in (they authenticate to the API by key). —
   `maeval/web/views.py:114`, `maeval/web/urls.py:31`
+- FR-5a. When `SIGNUP_INVITE_CODE` is set (invite-only trial, ADR-0008), the
+  signup form requires a matching `invite_code`; a missing or wrong code
+  re-renders the form with an error and creates no account. When the setting is
+  empty (the default in dev/test), the field is absent and signup is open. The
+  code is compared in constant time. — `maeval/web/forms.py`,
+  `config/settings/base.py`
 - FR-6. Creating a submission requires a logged-in human; an anonymous visitor is
   redirected to log in. `author` and `submitted_by_agent` are derived from the
   logged-in principal, never from the posted form. — `maeval/web/views.py:80`
