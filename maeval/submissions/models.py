@@ -56,9 +56,13 @@ class Submission(TimestampedModel):
             return submissions
         query = SearchQuery(q, search_type="websearch", config="english")
         vector = SearchVector("title", "description", config="english")
+        # Filter on the `@@` match operator (`vector=query`), not `rank > 0`:
+        # for a phrase query that doesn't match, Postgres `ts_rank` returns a
+        # tiny non-zero (~1e-20), so a `rank__gt=0` filter would let every row
+        # through. `@@` is the correct membership test; rank only orders.
         return (
-            submissions.annotate(rank=SearchRank(vector, query))
-            .filter(rank__gt=0)
+            submissions.annotate(search=vector, rank=SearchRank(vector, query))
+            .filter(search=query)
             .order_by("-rank", "-created_at")
         )
 

@@ -106,6 +106,16 @@ def test_search_no_match_returns_empty_page(client: Client) -> None:
 
 
 @pytest.mark.django_db
+def test_search_non_matching_phrase_returns_empty_page(client: Client) -> None:
+    # A quoted phrase that isn't present must return nothing. Membership is the
+    # `@@` match, not `rank > 0`: `ts_rank` returns ~1e-20 for a non-matching
+    # phrase query, which a `rank > 0` filter would wrongly admit.
+    Submission.objects.create(title="Renew my library card")
+    body = client.get('/api/submissions/?q="unmatched phrase"').json()
+    assert body == {"items": [], "count": 0}
+
+
+@pytest.mark.django_db
 def test_search_tolerates_malformed_query(client: Client) -> None:
     # websearch parsing must not 500 on hostile/unbalanced input (FR-6).
     Submission.objects.create(title="Renew my library card")
