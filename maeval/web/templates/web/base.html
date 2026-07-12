@@ -73,19 +73,9 @@
 
   <script src="{% static 'web/vendor/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'web/vendor/htmx.min.js' %}"></script>
-  <script>
-    // Close any open account menu when clicking away or pressing Escape.
-    document.addEventListener("click", function (event) {
-      document.querySelectorAll("details[data-menu][open]").forEach(function (menu) {
-        if (!menu.contains(event.target)) { menu.open = false; }
-      });
-    });
-    document.addEventListener("keydown", function (event) {
-      if (event.key !== "Escape") { return; }
-      document.querySelectorAll("details[data-menu][open]").forEach(function (menu) {
-        menu.open = false;
-      });
-    });
-  </script>
+  {% comment %}Site-wide behaviors live in static files, not inline, so the CSP
+    can stay nonce-free `script-src 'self'` (ADR-0010).{% endcomment %}
+  <script src="{% static 'web/js/menu.js' %}" defer></script>
+  <script src="{% static 'web/js/confirm-submit.js' %}" defer></script>
 </body>
 </html>

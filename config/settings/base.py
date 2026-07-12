@@ -12,6 +12,7 @@ from pathlib import Path
 import dj_database_url
 import environ
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.csp import CSP
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -95,6 +96,9 @@ NINJA_PAGINATION_MAX_LIMIT = 100
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Sets the CSP header alongside the other security headers, before the
+    # static file server. See ADR-0010.
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -131,6 +135,25 @@ AXES_HTTP_RESPONSE_CODE = 429
 # attribution (the same proxy already terminates TLS, see SECURE_PROXY_SSL_HEADER
 # in production settings). REMOTE_ADDR is the local fallback for dev.
 AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
+
+# Content-Security-Policy (ADR-0010). Every asset is same-origin (Bootstrap,
+# htmx, and fonts are vendored and served by WhiteNoise), so the strictest
+# policy is also the simplest: nonce-free `'self'`, no `unsafe-*`. Enforced in
+# every environment so the test suite catches a reintroduced inline script
+# locally. `SECURE_CSP_REPORT_ONLY` (same dict) is the lever for a production
+# soak or a future loosening investigation.
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF],
+    "style-src": [CSP.SELF],
+    "img-src": [CSP.SELF, "data:"],
+    "font-src": [CSP.SELF],
+    "connect-src": [CSP.SELF],
+    "form-action": [CSP.SELF],
+    "frame-ancestors": [CSP.NONE],
+    "base-uri": [CSP.NONE],
+    "object-src": [CSP.NONE],
+}
 
 ROOT_URLCONF = "config.urls"
 
