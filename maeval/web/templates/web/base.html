@@ -5,41 +5,55 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}MA Agent Eval{% endblock %}</title>
+  <meta name="theme-color" content="#181e24">
   <link rel="stylesheet" href="{% static 'web/vendor/bootstrap.min.css' %}">
+  {# Preload the two most-used faces so the civic type paints without a flash. #}
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{% static 'web/fonts/public-sans-latin-400-normal.woff2' %}">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{% static 'web/fonts/public-sans-latin-600-normal.woff2' %}">
+  <link rel="stylesheet" href="{% static 'web/css/maeval.css' %}">
 </head>
 {# CSRF token is sent on every htmx request (upvote, live search POSTs). #}
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'web:home' %}">MA Agent Eval</a>
-      <div class="navbar-nav me-auto">
-        <a class="nav-link" href="{% url 'web:submission_list' %}">Submissions</a>
-        <a class="nav-link" href="{% url 'web:trace_list' %}">Run traces</a>
-      </div>
-      <div class="navbar-nav">
+  {% with active=request.resolver_match.url_name %}
+  <a class="visually-hidden-focusable" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-header__brand" href="{% url 'web:home' %}">MA Agent Eval</a>
+      <nav class="site-nav site-nav--primary" aria-label="Primary">
+        <a class="site-nav__link" href="{% url 'web:submission_list' %}"
+           {% if active == 'submission_list' or active == 'submission_detail' or active == 'submission_create' %}aria-current="page"{% endif %}>Submissions</a>
+        <a class="site-nav__link" href="{% url 'web:trace_list' %}"
+           {% if active == 'trace_list' %}aria-current="page"{% endif %}>Run traces</a>
+      </nav>
+      <nav class="site-nav" aria-label="Account">
         {% if user.is_authenticated %}
-          <a class="nav-link" href="{% url 'web:submission_create' %}">New submission</a>
-          <span class="navbar-text mx-2">{{ user.username }}</span>
-          <form method="post" action="{% url 'web:logout' %}" class="d-inline">
+          <a class="site-nav__link" href="{% url 'web:submission_create' %}">New submission</a>
+          <span class="site-header__user">{{ user.username }}</span>
+          <form method="post" action="{% url 'web:logout' %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-light">Log out</button>
+            <button type="submit" class="button button--secondary button--sm">Log out</button>
           </form>
         {% else %}
-          <a class="nav-link" href="{% url 'web:login' %}">Log in</a>
-          <a class="nav-link" href="{% url 'web:signup' %}">Sign up</a>
+          <a class="site-nav__link" href="{% url 'web:login' %}"
+             {% if active == 'login' %}aria-current="page"{% endif %}>Log in</a>
+          <a class="site-nav__link" href="{% url 'web:signup' %}"
+             {% if active == 'signup' %}aria-current="page"{% endif %}>Sign up</a>
         {% endif %}
-      </div>
+      </nav>
     </div>
-  </nav>
+  </header>
 
-  <main class="container py-4">
+  <main id="main" class="page{% block page_modifier %}{% endblock %}">
     {% if messages %}
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        <div class="flash flash--{{ message.tags|default:'info' }}" role="status">{{ message }}</div>
       {% endfor %}
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+  {% endwith %}
 
   <script src="{% static 'web/vendor/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'web/vendor/htmx.min.js' %}"></script>

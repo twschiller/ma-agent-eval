@@ -13,11 +13,10 @@ from maeval.accounts.models import User
 from maeval.submissions.models import Submission
 
 
-class BootstrapMixin:
-    """Add Bootstrap's ``form-control`` class to every visible field widget.
-
-    Styling is deliberately thin for now — the visual pass comes later; this
-    just keeps inputs consistent across the forms.
+class FieldStyleMixin:
+    """Tag every visible field widget with the design system's ``field-input``
+    class (see ``maeval.css``), so browser forms render with the project's own
+    input styling rather than Bootstrap defaults.
     """
 
     fields: dict  # provided by Form/ModelForm
@@ -26,14 +25,14 @@ class BootstrapMixin:
         super().__init__(*args, **kwargs)  # type: ignore[misc]  # cooperative mixin
         for field in self.fields.values():
             css = field.widget.attrs.get("class", "")
-            field.widget.attrs["class"] = f"{css} form-control".strip()
+            field.widget.attrs["class"] = f"{css} field-input".strip()
 
 
-class LoginForm(BootstrapMixin, AuthenticationForm):
+class LoginForm(FieldStyleMixin, AuthenticationForm):
     """Session login for a human principal (username + password)."""
 
 
-class SignupForm(BootstrapMixin, UserCreationForm):
+class SignupForm(FieldStyleMixin, UserCreationForm):
     """Register a human principal (username + password).
 
     A web signup is always a human: agents carry unusable passwords and never
@@ -48,7 +47,7 @@ class SignupForm(BootstrapMixin, UserCreationForm):
         fields = ("username",)
 
 
-class SubmissionForm(BootstrapMixin, forms.ModelForm):
+class SubmissionForm(FieldStyleMixin, forms.ModelForm):
     """Create a submission from the browser. ``author`` and
     ``submitted_by_agent`` are set from the logged-in principal in the view,
     never from the posted data — the same attribution rule as the API."""

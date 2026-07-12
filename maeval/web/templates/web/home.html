@@ -1,31 +1,43 @@
 {% extends "web/base.html" %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-body-tertiary rounded-3">
-  <h1 class="display-6">Which civic tasks should AI agents handle?</h1>
-  <p class="col-md-9 fs-5">
+<section class="hero">
+  <h1 class="display hero__title">Which civic tasks should AI agents handle?</h1>
+  <p class="prose hero__lead">
     A public catalog of tasks people want an AI agent to perform against
-    Massachusetts &amp; Boston civic services &mdash; upvoted by the public,
-    with run traces showing what agents can actually do.
+    Massachusetts &amp; Boston civic services — upvoted by the public, with run
+    traces showing what agents can actually do.
   </p>
-  <a class="btn btn-primary" href="{% url 'web:submission_list' %}">Browse submissions</a>
-</div>
+  <div class="hero__actions">
+    <a class="button button--primary" href="{% url 'web:submission_list' %}">Browse submissions</a>
+    <a class="button button--secondary" href="{% url 'web:trace_list' %}">See run traces</a>
+  </div>
+</section>
 
 {% if top_submissions %}
-<h2 class="h4 mb-3">Most upvoted</h2>
-<div class="list-group">
-  {% for submission in top_submissions %}
-    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-       href="{% url 'web:submission_detail' submission.id %}">
-      <span>
-        {{ submission.title }}
-        {% if submission.submitted_by_agent %}
-          <span class="badge text-bg-info">agent</span>
-        {% endif %}
-      </span>
-      <span class="badge text-bg-secondary rounded-pill">&#9650; {{ submission.upvote_count }}</span>
-    </a>
-  {% endfor %}
-</div>
+  <div class="section-head">
+    <h2 class="headline">Most wanted</h2>
+    <a class="button button--ghost" href="{% url 'web:submission_list' %}">All submissions</a>
+  </div>
+  <div class="list-rows">
+    {% for submission in top_submissions %}
+      <a class="list-row" href="{% url 'web:submission_detail' submission.id %}">
+        <div class="list-row__body">
+          <div class="list-row__title">
+            {{ submission.title }}
+            {% if submission.submitted_by_agent %}{% include "web/_agent_badge.html" %}{% endif %}
+          </div>
+          <div class="list-row__meta">by {{ submission.author.username|default:"anonymous" }}</div>
+        </div>
+        <div class="list-row__demand">
+          <span class="demand">
+            <svg class="demand__glyph" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 1.5l5 8H1z" fill="currentColor"/></svg>
+            <span class="demand__count">{{ submission.upvote_count }}</span>
+            <span class="demand__label">upvote{{ submission.upvote_count|pluralize }}</span>
+          </span>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
 {% endif %}
 {% endblock %}

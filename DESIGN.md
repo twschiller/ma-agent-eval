@@ -9,10 +9,12 @@ colors:
   sunken: "#f1f4f7"
   border: "#dbdee2"
   border-strong: "#c0c5c9"
+  ink-link: "#c6cdd4"
   primary: "#005694"
   primary-tint: "#dff1ff"
   ember: "#a44000"
   ember-fill: "#cf6f19"
+  ember-tint: "#fff3ea"
   success: "#067132"
   success-fill: "#def1e1"
   partial: "#855a00"
@@ -55,6 +57,24 @@ typography:
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.5
+    letterSpacing: "normal"
+  subtitle:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "1.0625rem"
+    fontWeight: 600
+    lineHeight: 1.35
+    letterSpacing: "normal"
+  control:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "normal"
+  micro:
+    fontFamily: "Public Sans, system-ui, sans-serif"
+    fontSize: "0.75rem"
+    fontWeight: 600
+    lineHeight: 1.4
     letterSpacing: "normal"
 rounded:
   sm: "4px"
@@ -196,6 +216,19 @@ pill, the text sits on it (or on white). All verified ≥6:1 on white.
 - **Sunken** (#f1f4f7): Zebra rows, inset code/data blocks, disabled fields.
 - **Border** (#dbdee2) / **Border Strong** (#c0c5c9): Hairline dividers, card and input strokes; the strong step for emphasized separators and input focus edges.
 
+### On-ink tints
+
+Two values exist only *on the Harbor Ink masthead*, where the near-black ground
+inverts the contrast math and the white-surface tokens don't apply:
+
+- **Ink Link** (#c6cdd4): Resting color of masthead nav links on the ink bar —
+  a soft white that reads as a link without shouting, then brightens to full
+  Surface on hover / current. ≥9:1 on Harbor Ink (AAA). Hairline dividers inside
+  the ink bar use a transparency of white (`rgba(255,255,255,0.12)`), the ground's
+  own color rather than a new hue.
+- **Ember Tint** (#fff3ea): The hover wash behind the (unfilled) upvote control —
+  the faintest warm lift of the demand axis. Ember text stays ≥6:1 on it.
+
 ### Named Rules — Color
 
 **The Two-Axis Rule.** Ember is demand, blue is capability. Ember appears *only*
@@ -230,6 +263,15 @@ Fixed rem scale (product register — no fluid clamp), ~1.2 ratio between steps.
 - **Body** (400, 1rem/16px, 1.6): Descriptions and prose. Cap measure at 65–75ch.
 - **Label** (600, 0.8125rem/13px, +0.01em): Form labels, table column heads, meta keys. Sentence case by default.
 - **Mono** (400, 0.875rem/14px): Model, harness, tool, IDs, timestamps, keys. Inline or in data blocks.
+
+Three UI sub-steps fill the gaps the six roles above leave in dense product
+chrome. They are deliberate, not drift — the surface has more type elements than
+a brand page, and jumping straight from Body (16px) to Label (13px) skips the
+control and list-row sizes real tables and buttons need.
+
+- **Subtitle** (600, 1.0625rem/17px, 1.35): Titles inside a dense list row and the masthead wordmark — heavier than Body, lighter than Title.
+- **Control** (600, 0.9375rem/15px, 1.2): Buttons, the upvote control, table body cells, and list-row descriptions. The default interactive-text size.
+- **Micro** (600, 0.75rem/12px, 1.4): Technical chips only — the agent badge, tool tags, the demand tally's "upvotes" label.
 
 ### Named Rules — Type
 

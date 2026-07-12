@@ -1,0 +1,25 @@
+{% comment %}
+Run-outcome pill for one `trace`. Every pill carries an icon *and* the word — the
+color-never-alone rule (DESIGN.md / AAA): a grayscale or colorblind reader still
+reads "Partial." Icon shapes are distinct (check / half / cross), not just tinted.
+{% endcomment %}
+{% if trace.outcome == "success" %}
+  <span class="outcome outcome--success">
+    <svg class="outcome__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+      <path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>{{ trace.get_outcome_display }}
+  </span>
+{% elif trace.outcome == "partial" %}
+  <span class="outcome outcome--partial">
+    <svg class="outcome__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+      <circle cx="8" cy="8" r="5.3" stroke="currentColor" stroke-width="1.4"/>
+      <path d="M8 2.7a5.3 5.3 0 0 1 0 10.6z" fill="currentColor"/>
+    </svg>{{ trace.get_outcome_display }}
+  </span>
+{% else %}
+  <span class="outcome outcome--failed">
+    <svg class="outcome__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+      <path d="M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>{{ trace.get_outcome_display }}
+  </span>
+{% endif %}
