@@ -239,6 +239,17 @@ def test_login_flow(client: Client, human: User) -> None:
 
 
 @pytest.mark.django_db
+def test_admin_login_redirects_to_primary_login(client: Client) -> None:
+    # The admin has no login form of its own (web.md FR-1): visiting it sends the
+    # caller to the primary session login, preserving `next` so they return.
+    response = client.get("/admin/login/", {"next": "/admin/submissions/"})
+    assert response.status_code == 302
+    location = response.headers["Location"]
+    assert location.startswith(reverse("web:login"))
+    assert "next=/admin/submissions/" in location
+
+
+@pytest.mark.django_db
 def test_trace_list_renders(client: Client) -> None:
     submission = Submission.objects.create(title="Renew my library card")
     RunTrace.objects.create(
