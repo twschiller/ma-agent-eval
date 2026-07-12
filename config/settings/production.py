@@ -15,6 +15,11 @@ ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", [])
 # HTTPS / security hardening. Fly terminates TLS and sets X-Forwarded-Proto.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
+# Fly's health check hits /api/healthz over plain internal HTTP (no
+# X-Forwarded-Proto), so without this it gets a 301 to https and the probe
+# never sees a 200. The liveness probe is the only unauthenticated internal
+# caller; exempting just this path keeps the redirect on for everything else.
+SECURE_REDIRECT_EXEMPT = [r"^api/healthz$"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
