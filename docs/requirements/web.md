@@ -34,8 +34,10 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 
 - FR-1. The site is served at the root; the API stays under `/api/` and the
   staff admin under `/admin/`. The web app owns a namespaced URLconf
-  (`web:`), included from the composition root. —
-  `config/urls.py:12`, `maeval/web/urls.py:16`
+  (`web:`), included from the composition root. The admin has no login form of
+  its own: an unauthenticated visitor to `/admin/login/` is redirected to the
+  primary `web:login` screen with `next` preserved. —
+  `config/urls.py`, `maeval/web/urls.py:16`
 - FR-2. Anyone (no auth) can browse submissions, newest first, paginated (20 per
   page), and open a submission's detail page. — `maeval/web/views.py:54`, `:68`
 - FR-3. Anyone can full-text search submissions from a live search box: typing
