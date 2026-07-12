@@ -1,9 +1,11 @@
 """HTTP layer for submissions. Depends on schemas + models."""
 
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, QuerySet
 from django.shortcuts import get_object_or_404
 from ninja import Router
+from ninja.pagination import paginate
 from ninja.responses import Status
 
 from maeval.accounts.auth import ANY_PRINCIPAL, require_scope
@@ -15,9 +17,27 @@ router = Router(tags=["submissions"])
 
 
 @router.get("/", response=list[SubmissionOut], auth=None)
-def list_submissions(request) -> list[Submission]:  # noqa: ARG001
-    """Public, unauthenticated list of submissions ordered by newest first."""
-    return list(Submission.objects.select_related("author").all())
+@paginate
+def list_submissions(request, q: str | None = None) -> QuerySet[Submission]:  # noqa: ARG001
+    """Public, unauthenticated, LimitOffset-paginated list of submissions.
+
+    Newest first by default. Pass ``q`` for a full-text search over title and
+    description, in which case results are ordered by relevance (see ADR-0005).
+    """
+    submissions = Submission.objects.select_related("author")
+    if q:
+        # `websearch` parses arbitrary user input safely (quotes, OR, -term)
+        # without raising on syntax, so the public search box can't 500.
+        # Pin `english` so stemming (library/libraries) is deterministic rather
+        # than depending on the DB's default_text_search_config.
+        query = SearchQuery(q, search_type="websearch", config="english")
+        vector = SearchVector("title", "description", config="english")
+        return (
+            submissions.annotate(rank=SearchRank(vector, query))
+            .filter(rank__gt=0)
+            .order_by("-rank", "-created_at")
+        )
+    return submissions.all()
 
 
 @router.post("/", response={201: SubmissionOut}, auth=ANY_PRINCIPAL)

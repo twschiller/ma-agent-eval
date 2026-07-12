@@ -84,6 +84,25 @@
         "title": "Health",
         "type": "object"
       },
+      "Input": {
+        "properties": {
+          "limit": {
+            "default": 100,
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "title": "Input",
+        "type": "object"
+      },
       "Outcome": {
         "enum": [
           "success",
@@ -92,6 +111,48 @@
         ],
         "title": "Outcome",
         "type": "string"
+      },
+      "PagedSubmissionOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubmissionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedSubmissionOut",
+        "type": "object"
+      },
+      "PagedTraceOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TraceOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedTraceOut",
+        "type": "object"
       },
       "SignupIn": {
         "properties": {
@@ -506,19 +567,55 @@
     },
     "/api/submissions/": {
       "get": {
-        "description": "Public, unauthenticated list of submissions ordered by newest first.",
+        "description": "Public, unauthenticated, LimitOffset-paginated list of submissions.\n\nNewest first by default. Pass ``q`` for a full-text search over title and\ndescription, in which case results are ordered by relevance (see ADR-0005).",
         "operationId": "maeval_submissions_views_list_submissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/SubmissionOut"
-                  },
-                  "title": "Response",
-                  "type": "array"
+                  "$ref": "#/components/schemas/PagedSubmissionOut"
                 }
               }
             },
@@ -613,7 +710,7 @@
     },
     "/api/traces/": {
       "get": {
-        "description": "Public, unauthenticated list of run traces, newest first.\n\nPass ``submission_id`` to see only the runs recorded against one task.",
+        "description": "Public, unauthenticated, LimitOffset-paginated list of run traces, newest first.\n\nPass ``submission_id`` to see only the runs recorded against one task.",
         "operationId": "maeval_traces_views_list_traces",
         "parameters": [
           {
@@ -631,6 +728,29 @@
               ],
               "title": "Submission Id"
             }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -638,11 +758,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/TraceOut"
-                  },
-                  "title": "Response",
-                  "type": "array"
+                  "$ref": "#/components/schemas/PagedTraceOut"
                 }
               }
             },

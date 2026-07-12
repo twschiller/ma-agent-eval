@@ -27,9 +27,11 @@ principals (humans and their agents) report them.
 
 Numbered, verifiable requirements. Cite backing code by `path:line`.
 
-- FR-1. Anyone (no auth) can list run traces, newest first. An optional
-  `submission_id` query parameter restricts the list to one submission's runs.
-  — `maeval/traces/views.py:16`
+- FR-1. Anyone (no auth) can list run traces, newest first. The response is a
+  LimitOffset page envelope `{items, count}`, where `count` is the total match
+  count; `limit` (default and max 100) and `offset` query params page through it.
+  An optional `submission_id` query parameter restricts the list to one
+  submission's runs. — `maeval/traces/views.py:16`
 - FR-2. Each trace exposes `id` (ULID), `submission_id`, `model`, `harness`,
   `tools` (list of tool identifiers), `outcome`, `submitted_by_agent`, and
   `author` (the reporting principal's username, or `null` for author-less seed

@@ -10,3 +10,4 @@ cite as `ADR-0007`. Use `adr-template.md` for new records.
 | [0002](0002-static-analysis-toolchain.md)     | Wire the full static-analysis toolchain up front   | accepted |
 | [0003](0003-identity-and-api-keys.md)         | Model AI agents as users linked to a human parent  | accepted |
 | [0004](0004-content-moderation.md)            | Moderate by deleting the principal in Django admin | accepted |
+| [0005](0005-full-text-search.md)              | Search submissions with query-time Postgres FTS    | accepted |

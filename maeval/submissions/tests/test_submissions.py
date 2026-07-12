@@ -49,7 +49,8 @@ def test_healthz(client: Client) -> None:
 def test_list_submissions_empty(client: Client) -> None:
     response = client.get("/api/submissions/")
     assert response.status_code == 200
-    assert response.json() == []
+    # LimitOffset page envelope, empty (FR-1).
+    assert response.json() == {"items": [], "count": 0}
 
 
 @pytest.mark.django_db
@@ -57,10 +58,59 @@ def test_list_submissions_returns_created(client: Client) -> None:
     Submission.objects.create(title="Renew my library card")
     response = client.get("/api/submissions/")
     body = response.json()
-    assert len(body) == 1
-    assert body[0]["title"] == "Renew my library card"
-    assert body[0]["submitted_by_agent"] is False
-    assert body[0]["author"] is None
+    assert body["count"] == 1
+    items = body["items"]
+    assert len(items) == 1
+    assert items[0]["title"] == "Renew my library card"
+    assert items[0]["submitted_by_agent"] is False
+    assert items[0]["author"] is None
+
+
+@pytest.mark.django_db
+def test_list_submissions_paginates_with_limit_offset(client: Client) -> None:
+    # Newest first; created in order, so the last created is items[0].
+    for n in range(3):
+        Submission.objects.create(title=f"Task {n}")
+    page = client.get("/api/submissions/?limit=2&offset=0").json()
+    assert page["count"] == 3  # total match count, not the page size
+    assert [item["title"] for item in page["items"]] == ["Task 2", "Task 1"]
+    tail = client.get("/api/submissions/?limit=2&offset=2").json()
+    assert [item["title"] for item in tail["items"]] == ["Task 0"]
+
+
+# --- search ---------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_search_matches_by_stemmed_keyword(client: Client) -> None:
+    Submission.objects.create(title="Renew my library card")
+    Submission.objects.create(title="Book a park for a birthday")
+    # "libraries" stems to the same root as "library" (english config).
+    body = client.get("/api/submissions/?q=libraries").json()
+    assert body["count"] == 1
+    assert body["items"][0]["title"] == "Renew my library card"
+
+
+@pytest.mark.django_db
+def test_search_matches_description(client: Client) -> None:
+    Submission.objects.create(title="Book a park", description="near the harbor")
+    body = client.get("/api/submissions/?q=harbor").json()
+    assert [item["title"] for item in body["items"]] == ["Book a park"]
+
+
+@pytest.mark.django_db
+def test_search_no_match_returns_empty_page(client: Client) -> None:
+    Submission.objects.create(title="Renew my library card")
+    body = client.get("/api/submissions/?q=spaceship").json()
+    assert body == {"items": [], "count": 0}
+
+
+@pytest.mark.django_db
+def test_search_tolerates_malformed_query(client: Client) -> None:
+    # websearch parsing must not 500 on hostile/unbalanced input (FR-6).
+    Submission.objects.create(title="Renew my library card")
+    response = client.get("/api/submissions/?q=%22unbalanced (OR -")
+    assert response.status_code == 200
 
 
 # --- create ---------------------------------------------------------------

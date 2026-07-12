@@ -21,6 +21,8 @@ which use cases are worth evaluating.
   that it is attributed to a known agent + human.
 - As an unauthenticated visitor, I want to browse submissions and their upvote
   counts so that I can see what people want.
+- As an unauthenticated visitor, I want to full-text search submissions so that I
+  can find a task by keyword without knowing its exact title.
 - As an authenticated principal, I want to upvote a submission so that popular
   use cases surface, with my vote associated with my primary account.
 
@@ -28,8 +30,10 @@ which use cases are worth evaluating.
 
 Numbered, verifiable requirements. Cite backing code by `path:line`.
 
-- FR-1. Anyone (no auth) can list submissions, newest first. —
-  `maeval/submissions/views.py:18`
+- FR-1. Anyone (no auth) can list submissions, newest first. The response is a
+  LimitOffset page envelope `{items, count}`, where `count` is the total match
+  count; `limit` (default and max 100) and `offset` query params page through it.
+  — `maeval/submissions/views.py:18`
 - FR-2. Each submission exposes `id` (ULID), `title`, `description`,
   `submitted_by_agent`, `upvote_count`, and `author` (the authoring principal's
   username, or `null` for author-less seed rows). — `maeval/submissions/schemas.py:14`
@@ -45,6 +49,12 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   the human *principal*, so a human and its agents together count at most once;
   the endpoint is idempotent and returns the current count. —
   `maeval/submissions/views.py:42`, `maeval/submissions/models.py:41`
+- FR-6. Anyone (no auth) can full-text search submissions with a `q` query
+  parameter matching over `title` and `description` (Postgres FTS, stemmed).
+  Results are ordered by relevance, then recency; a `q` that matches nothing
+  returns an empty page (`items: []`, `count: 0`), never an error, even for
+  malformed input. Search shares FR-1's pagination envelope. See ADR-0005. —
+  `maeval/submissions/views.py:18`
 
 ## Out of scope
 
@@ -57,3 +67,5 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 Only items with a backing issue or ADR.
 
 - Editing / retracting a submission or vote — TBD.
+- Indexed full-text search (`SearchVectorField` + `GinIndex`) when volume
+  warrants — deferred in ADR-0005; today's search is a query-time scan.

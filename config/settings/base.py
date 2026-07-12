@@ -56,6 +56,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Postgres full-text search lookups (SearchVector/SearchRank); Postgres in
+    # every environment, so no SQLite fallback to design around. See ADR-0005.
+    "django.contrib.postgres",
     # Local apps
     "maeval.common",
     "maeval.accounts",
@@ -65,6 +68,11 @@ INSTALLED_APPS = [
 
 # Agents and humans are both rows in this custom user model (see ADR-0003).
 AUTH_USER_MODEL = "accounts.User"
+
+# Every list endpoint is LimitOffset-paginated with a {items, count} envelope
+# (Ninja's default pagination class). Cap the page size so an agent client can't
+# request an unbounded page; the default limit when none is given is 100.
+NINJA_PAGINATION_MAX_LIMIT = 100
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
