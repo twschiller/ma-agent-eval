@@ -37,6 +37,7 @@ maeval/                 # domain apps
 tools/                  # standalone scripts (export_openapi.py)
 docs/decisions/         # ADRs (MADR-minimal), README.md index
 docs/requirements/      # golden specs, one per behavioral area
+docs/deployment.md      # sysadmin runbook: first-time Fly.io + Neon setup, ops
 .semgrep/               # project static-analysis rules (add incrementally)
 ```
 
@@ -60,7 +61,7 @@ touches the DB.
 - `make semgrep` — project static-analysis rules
 - `make schema` — regenerate + lint `openapi.json`
 - `make migrate` — apply migrations
-- `make deploy` — `fly deploy`
+- `make deploy` — `fly deploy` (first-time setup + ops: `docs/deployment.md`)
 
 ## Conventions
 
