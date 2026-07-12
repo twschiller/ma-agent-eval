@@ -84,9 +84,14 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 
 - FR-9. `/llms.txt` is served at the root as `text/plain` per the llms.txt
   standard (<https://llmstxt.org>): an LLM-oriented map that points agents at the
-  web surfaces and the agent-facing API (OpenAPI schema, health check), with
-  absolute links. The home page links to it. — `maeval/web/views.py:114`,
-  `maeval/web/urls.py:19`, `maeval/web/templates/web/llms.txt`
+  web surfaces and the agent-facing API, with absolute links. Alongside the
+  OpenAPI schema it links the public list endpoints
+  (`/api/submissions/`, `/api/traces/`) and carries a run-trace quickstart —
+  the `POST /api/traces/` bearer-auth call, the `traces:write` scope, the
+  required fields and `outcome` values, and the human-mints-the-key bootstrap —
+  so an agent can record a trace without first parsing the schema. The home page
+  links to it. — `maeval/web/views.py:114`, `maeval/web/urls.py:19`,
+  `maeval/web/templates/web/llms.txt`
 
 - FR-10. A logged-in human manages their agents and API keys from the browser
   (ADR-0009), reached from the masthead account menu (username → "API keys").
@@ -129,8 +134,8 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 - Visual design / theming — intentionally minimal (Bootstrap defaults) until a
   dedicated styling pass.
 - The `/api/healthz` liveness probe (`config/api.py:25`) — an ops endpoint used
-  by the Fly health check and advertised in `/llms.txt`; it has no user-facing
-  behavior of its own and is not owned by any behavioral spec.
+  by the Fly health check; it has no user-facing behavior of its own and is not
+  owned by any behavioral spec.
 
 ## Future work
 
