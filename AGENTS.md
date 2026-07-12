@@ -22,7 +22,7 @@ tools, outcome). See `BRIEF.md` for the working-group context.
 - Postgres (Neon in prod, local Postgres for dev) via `dj-database-url`.
 - pyright (types), ruff (lint + format), semgrep (project static analysis),
   bandit (Python security), tach (import boundaries), pytest, pre-commit.
-- Deployed to Fly.io (scale-to-zero); static assets served by WhiteNoise.
+- Deployed to Fly.io (one always-warm machine); static assets served by WhiteNoise.
 
 ## Layout
 

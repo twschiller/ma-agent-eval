@@ -19,8 +19,8 @@ win — fix this guide.
 
 ## Architecture at a glance
 
-- **One Fly app** (`ma-agent-eval`, region `iad`), scale-to-zero:
-  `min_machines_running = 0`, so the first request after idle pays a cold start.
+- **One Fly app** (`ma-agent-eval`, region `iad`), keeping one machine warm:
+  `min_machines_running = 1`, so requests don't pay a scale-to-zero cold start.
 - **Gunicorn** serves `config.wsgi` on port 8000; Fly terminates TLS and forces
   HTTPS. Static assets are served in-process by **WhiteNoise** (no bucket, no CDN),
   collected at image-build time.
@@ -37,8 +37,8 @@ win — fix this guide.
 2. Copy the **pooled** connection string. It must keep `sslmode=require`:
    `postgres://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require`.
 
-Use the pooled endpoint, not the direct one — scale-to-zero means bursty,
-short-lived connections.
+Use the pooled endpoint, not the direct one — Fly may still cycle or add
+machines, so connections stay bursty and short-lived.
 
 ### 2. Create the Fly app
 
@@ -128,8 +128,10 @@ Confirm PITR/retention is configured there.
   `DJANGO_ALLOWED_HOSTS` in `fly.toml` and redeploy.
 - **Static assets 404** — `collectstatic` runs at image build (see `Dockerfile`);
   a failure there surfaces in the build logs, not at runtime. Rebuild.
-- **First request is slow** — expected cold start from scale-to-zero
-  (`min_machines_running = 0`). Raise it to `1` in `fly.toml` to keep one warm.
+- **First request is slow** — one machine is kept warm
+  (`min_machines_running = 1`), so this should be rare. To trade latency for cost,
+  lower it to `0` in `fly.toml` to re-enable scale-to-zero (idle requests then pay
+  a cold start).
 - **Signup unexpectedly open or closed** — check whether `SIGNUP_INVITE_CODE` is
   set (`fly secrets list`); empty means open signup (ADR-0008).
 
