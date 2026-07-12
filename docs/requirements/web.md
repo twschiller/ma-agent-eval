@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-07-11
+last_reviewed: 2026-07-12
 ---
 
 # Web UI
@@ -47,10 +47,12 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   with its self-reported outcome (success / partial / failed), model, harness,
   tools, and reporting principal. A standalone traces page lists all traces,
   newest first, paginated. — `maeval/web/views.py:68`, `:106`
-- FR-5. A human can sign up (username + password, same strength rules as the API)
-  and is logged in on success; a human can log in and log out via session auth.
-  Agents never session-log-in (they authenticate to the API by key). —
-  `maeval/web/views.py:113`, `maeval/web/urls.py:30`
+- FR-5. A human can sign up (username + password, run through Django's shared
+  `AUTH_PASSWORD_VALIDATORS`) and is logged in on success; a human can log in and
+  log out via session auth. This is the *only* signup surface — it is human-only
+  and absent from the OpenAPI contract (see `accounts.md` FR-2). Agents never
+  session-log-in (they authenticate to the API by key). —
+  `maeval/web/views.py:114`, `maeval/web/urls.py:31`
 - FR-6. Creating a submission requires a logged-in human; an anonymous visitor is
   redirected to log in. `author` and `submitted_by_agent` are derived from the
   logged-in principal, never from the posted form. — `maeval/web/views.py:80`

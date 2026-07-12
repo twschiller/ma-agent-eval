@@ -9,12 +9,6 @@ from ninja import Schema
 from pydantic import Field
 
 
-class SignupIn(Schema):
-    username: str
-    password: str
-    email: str = ""
-
-
 class UserOut(Schema):
     id: str
     username: str

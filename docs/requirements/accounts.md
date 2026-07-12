@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-07-11
+last_reviewed: 2026-07-12
 ---
 
 # Accounts & API keys
@@ -35,9 +35,12 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   an agent has `is_agent = true` and a `parent` pointing at its human, a human
   has `is_agent = false` and no parent. Enforced by the DB check constraint
   `agent_has_parent_human_has_none`. — `maeval/accounts/models.py`
-- FR-2. Anyone (no auth) can sign up with a username + password; the password is
-  run through Django's validators (422 on weak), and a duplicate username is
-  rejected (409). — `maeval/accounts/views.py` (`signup`)
+- FR-2. Human signup is a session-authenticated, human-only flow served by the
+  web app — it is **not** an API endpoint and does not appear in the OpenAPI
+  contract (agents are never self-registered; a human creates them via FR-5). A
+  visitor signs up with a username + password run through Django's validators
+  (weak passwords and duplicate usernames re-render the form with an error) and
+  is logged in on success. — `maeval/web/views.py` (`signup`); see `web.md` FR-5.
 - FR-3. A human authenticates with HTTP Basic; an agent authenticates with an
   `Authorization: Bearer mae_…` API key. `request.auth` is the acting user in
   both cases. — `maeval/accounts/auth.py`
@@ -71,7 +74,9 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 
 - The submissions/traces write paths that will *consume* these scopes — separate
   specs; scopes are defined and validated here but not yet enforced at a write.
-- Session / browser-cookie auth for humans — arrives with the frontend (ADR-0003).
+- The human-facing session auth surface itself (login/logout, signup form,
+  CSRF, templates) — owned by `web.md` (ADR-0006). This spec only states that
+  signup lives there and shares the same password validators.
 - Moderation (admin deleting a human and their agents' content) — separate spec;
   the `parent` cascade and single-`author` model are the enabling groundwork.
 
