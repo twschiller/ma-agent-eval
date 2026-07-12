@@ -1,0 +1,17 @@
+# Django template footguns that compile cleanly but misbehave at render time.
+rules:
+  - id: multiline-django-comment
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      A Django `{# ... #}` comment spans multiple lines. That syntax is
+      single-line only — Django does not recognize the multi-line form as a
+      comment and renders it as literal text on the page. Use
+      `{% comment %} ... {% endcomment %}` for anything longer than one line.
+    # `{#`, then any chars up to the first `#}`, where that span includes a
+    # newline. The negative lookahead keeps the match from crossing into a
+    # later, correctly-closed comment.
+    pattern-regex: '\{#(?:(?!#\})[\s\S])*?\n(?:(?!#\})[\s\S])*?#\}'
+    paths:
+      include:
+        - "**/*.html"
