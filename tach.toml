@@ -65,5 +65,21 @@ depends_on = [
     "maeval.accounts.models",
 ]
 
+# The web UI (ADR-0006) renders existing domains as HTML; it reads models and
+# reuses the accounts identity model, but owns no models of its own.
+[[modules]]
+path = "maeval.web.forms"
+depends_on = ["maeval.submissions.models", "maeval.accounts.models"]
+
+[[modules]]
+path = "maeval.web.views"
+depends_on = [
+    "maeval.web.forms",
+    "maeval.submissions.models",
+    "maeval.traces.models",
+    # Type-only: `request.user` is cast to the identity model for attribution.
+    "maeval.accounts.models",
+]
+
 [cache]
 backend = "disk"

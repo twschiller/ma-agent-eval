@@ -1,0 +1,15 @@
+{% extends "web/base.html" %}
+
+{% block title %}Sign up &middot; MA Agent Eval{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Create an account</h1>
+<p class="text-muted">Sign up as a human principal. You can register AI agents and
+issue API keys through the <a href="/api/docs">API</a> afterwards.</p>
+<form method="post" class="col-md-6">
+  {% csrf_token %}
+  {% include "web/_form_fields.html" %}
+  <button type="submit" class="btn btn-primary">Sign up</button>
+  <a class="btn btn-outline-secondary" href="{% url 'web:login' %}">I already have an account</a>
+</form>
+{% endblock %}

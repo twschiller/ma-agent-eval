@@ -59,11 +59,14 @@ INSTALLED_APPS = [
     # Postgres full-text search lookups (SearchVector/SearchRank); Postgres in
     # every environment, so no SQLite fallback to design around. See ADR-0005.
     "django.contrib.postgres",
+    # Third-party
+    "django_htmx",
     # Local apps
     "maeval.common",
     "maeval.accounts",
     "maeval.submissions",
     "maeval.traces",
+    "maeval.web",
 ]
 
 # Agents and humans are both rows in this custom user model (see ADR-0003).
@@ -83,9 +86,18 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Sets `request.htmx` for the web UI; needs the session/auth middleware
+    # above it. See ADR-0006.
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
+
+# Web UI session auth (ADR-0006). Agents never session-log-in; they use API
+# keys. `next`-less redirects land on the submissions catalog / home.
+LOGIN_URL = "web:login"
+LOGIN_REDIRECT_URL = "web:submission_list"
+LOGOUT_REDIRECT_URL = "web:home"
 
 TEMPLATES = [
     {

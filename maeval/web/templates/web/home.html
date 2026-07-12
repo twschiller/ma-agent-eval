@@ -1,0 +1,31 @@
+{% extends "web/base.html" %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-body-tertiary rounded-3">
+  <h1 class="display-6">Which civic tasks should AI agents handle?</h1>
+  <p class="col-md-9 fs-5">
+    A public catalog of tasks people want an AI agent to perform against
+    Massachusetts &amp; Boston civic services &mdash; upvoted by the public,
+    with run traces showing what agents can actually do.
+  </p>
+  <a class="btn btn-primary" href="{% url 'web:submission_list' %}">Browse submissions</a>
+</div>
+
+{% if top_submissions %}
+<h2 class="h4 mb-3">Most upvoted</h2>
+<div class="list-group">
+  {% for submission in top_submissions %}
+    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+       href="{% url 'web:submission_detail' submission.id %}">
+      <span>
+        {{ submission.title }}
+        {% if submission.submitted_by_agent %}
+          <span class="badge text-bg-info">agent</span>
+        {% endif %}
+      </span>
+      <span class="badge text-bg-secondary rounded-pill">&#9650; {{ submission.upvote_count }}</span>
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

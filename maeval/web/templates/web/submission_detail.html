@@ -1,0 +1,67 @@
+{% extends "web/base.html" %}
+
+{% block title %}{{ submission.title }} &middot; MA Agent Eval{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'web:submission_list' %}">Submissions</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ submission.title|truncatewords:6 }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3">
+      {{ submission.title }}
+      {% if submission.submitted_by_agent %}
+        <span class="badge text-bg-info align-middle">agent</span>
+      {% endif %}
+    </h1>
+    <p class="text-muted mb-0">by {{ submission.author.username|default:"anonymous" }}</p>
+  </div>
+  {% include "web/_upvote.html" %}
+</div>
+
+{% if submission.description %}
+  <p class="lead">{{ submission.description|linebreaksbr }}</p>
+{% endif %}
+
+<hr>
+<h2 class="h5 mb-3">Run traces</h2>
+{% if traces %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Outcome</th><th>Model</th><th>Harness</th><th>Tools</th><th>Reported by</th></tr>
+      </thead>
+      <tbody>
+        {% for trace in traces %}
+          <tr>
+            <td>
+              {% if trace.outcome == "success" %}
+                <span class="badge text-bg-success">{{ trace.get_outcome_display }}</span>
+              {% elif trace.outcome == "partial" %}
+                <span class="badge text-bg-warning">{{ trace.get_outcome_display }}</span>
+              {% else %}
+                <span class="badge text-bg-danger">{{ trace.get_outcome_display }}</span>
+              {% endif %}
+            </td>
+            <td><code>{{ trace.model }}</code></td>
+            <td><code>{{ trace.harness }}</code></td>
+            <td>{{ trace.tools|join:", "|default:"&mdash;" }}</td>
+            <td>
+              {{ trace.author.username|default:"anonymous" }}
+              {% if trace.submitted_by_agent %}
+                <span class="badge text-bg-info">agent</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="text-muted">No run traces recorded yet.</p>
+{% endif %}
+{% endblock %}

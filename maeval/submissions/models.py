@@ -8,7 +8,9 @@ perform against MA/Boston civic services (e.g. "renew my library card"). See
 from typing import ClassVar
 
 from django.conf import settings
-from django.db import models
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.db import models, transaction
+from django.db.models import F
 
 from maeval.common.models import TimestampedModel
 
@@ -39,6 +41,27 @@ class Submission(TimestampedModel):
     def __str__(self) -> str:
         return self.title
 
+    @classmethod
+    def search(cls, q: str | None) -> models.QuerySet[Submission]:
+        """Full-text matches on title + description, ranked by relevance.
+
+        Empty/None ``q`` is a no-op (returns all, newest-first) so browse and
+        search share one path. Uses `websearch` parsing so arbitrary user input
+        can't raise; the `english` config pins stemming. See ADR-0005. Shared by
+        the API list endpoint and the web list view — one FTS implementation, no
+        drift.
+        """
+        submissions = cls.objects.all()
+        if not q:
+            return submissions
+        query = SearchQuery(q, search_type="websearch", config="english")
+        vector = SearchVector("title", "description", config="english")
+        return (
+            submissions.annotate(rank=SearchRank(vector, query))
+            .filter(rank__gt=0)
+            .order_by("-rank", "-created_at")
+        )
+
 
 class Vote(TimestampedModel):
     """One principal's upvote of one submission.
@@ -64,3 +87,24 @@ class Vote(TimestampedModel):
 
     def __str__(self) -> str:
         return f"vote {self.pk}"
+
+    @classmethod
+    def cast(cls, *, submission: Submission, caller: object) -> None:
+        """Record ``caller``'s principal upvote of ``submission``.
+
+        Idempotent: the vote attributes to the caller's human *principal*, so a
+        human and its agents together count at most once, and the denormalized
+        ``upvote_count`` is bumped only on a first vote. Shared by the API
+        upvote endpoint and the web upvote view so the vote-attribution
+        semantics can't drift. ``caller`` is the acting principal (``User``);
+        callers refresh ``submission`` if they need the updated count.
+        """
+        with transaction.atomic():
+            _vote, created = cls.objects.get_or_create(
+                submission=submission,
+                voter=caller.principal,  # type: ignore[attr-defined]  # User.principal
+            )
+            if created:
+                Submission.objects.filter(pk=submission.pk).update(
+                    upvote_count=F("upvote_count") + 1
+                )

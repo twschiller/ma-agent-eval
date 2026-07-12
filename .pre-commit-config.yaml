@@ -99,7 +99,7 @@ repos:
     hooks:
       - id: codespell
         name: Detect typos
-        exclude: \.(lock|generated\..*)$|^openapi\.json$
+        exclude: \.(lock|generated\..*)$|^openapi\.json$|/vendor/
 
   - repo: local
     hooks:
