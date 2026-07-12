@@ -78,3 +78,18 @@ touches the DB.
 - Architecturally significant decisions get an ADR before the code merges.
 - Static-analysis plumbing (semgrep, bandit, ruff, tach, pyright) is already
   wired — add rules incrementally, don't bolt on new tools piecemeal.
+
+## Design system
+
+The human web UI (`maeval/web`) follows a committed design system, not ad-hoc
+styling. `PRODUCT.md` (audience, brand, principles) and `DESIGN.md` ("The Public
+Ledger" — tokens, type, components, named rules) at the repo root are the source
+of truth; they're realized in `maeval/web/static/web/css/maeval.css` and the
+`web/` templates. Keep `DESIGN.md` and the CSS in step — new tokens or type steps
+get documented in `DESIGN.md` rather than dropped in as one-off literals.
+
+Design work is done with the **impeccable** skill (design/critique/audit/polish
+flows and a UI-change detector hook). It is *not* vendored — install it
+per-developer with `npx impeccable` (see <https://impeccable.style>); the skill
+dirs and its local hook config are gitignored. Only its *outputs* — `PRODUCT.md`,
+`DESIGN.md`, and `.impeccable/` — are committed.
