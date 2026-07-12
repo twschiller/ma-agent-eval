@@ -266,6 +266,103 @@ a:hover {
   display: none;
 }
 
+/* ---- Account menu (masthead dropdown) ------------------------------------ */
+/* A native <details> disclosure: the summary sits on the ink masthead, the
+ * panel floats on a white surface below it. The only interactive dropdown in
+ * the system; shadow is allowed because it is a transient floating layer. */
+.menu {
+  position: relative;
+}
+.menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  list-style: none; /* drop the default disclosure triangle */
+  color: #c6cdd4;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+}
+.menu__trigger::-webkit-details-marker {
+  display: none;
+}
+.menu__trigger:hover {
+  color: var(--surface);
+}
+.menu__trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--primary);
+}
+.menu__caret {
+  width: 12px;
+  height: 12px;
+  transition: transform var(--motion) var(--ease-out);
+}
+.menu[open] .menu__caret {
+  transform: rotate(180deg);
+}
+.menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-xs));
+  z-index: var(--z-dropdown);
+  min-width: 12rem;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+}
+.menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+.menu__item:hover {
+  background: var(--paper);
+}
+.menu__item--button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* ---- One-time credential reveal ------------------------------------------ */
+/* Shown once, right after a key is minted (web:key_create). The Harbor Blue
+ * border draws the eye without introducing a new accent (Two-Axis Rule); the
+ * value is mono, per the machine-fact rule, and fully selectable. */
+.credential {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-lg);
+}
+.credential__value {
+  display: block;
+  padding: var(--space-md);
+  background: var(--sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  word-break: break-all;
+  user-select: all;
+}
+.credential__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 /* ---- Flash messages ------------------------------------------------------ */
 
 .flash {
@@ -861,8 +958,14 @@ textarea.field-input {
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     padding-top: var(--space-sm);
   }
-  .site-header__user {
-    display: none; /* keep the mobile bar to essentials */
+  /* The username is now the account-menu trigger label — keep it visible on
+     mobile (it's how you reach API keys / log out), and pin its panel to the
+     viewport edge so a long username can't push it off-screen. */
+  .menu {
+    position: static;
+  }
+  .menu__panel {
+    right: var(--space-md);
   }
   /* Traces table reflows to stacked key/value cards */
   .data-table,

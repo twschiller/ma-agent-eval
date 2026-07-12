@@ -5,13 +5,15 @@ session-auth write paths. The API surface has its own tests; here we assert the
 HTML layer and that attribution/vote semantics match via the shared helpers.
 """
 
+from datetime import timedelta
 from urllib.parse import urlencode
 
 import pytest
 from django.test import Client, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from maeval.accounts.models import User
+from maeval.accounts.models import ApiKey, User
 from maeval.submissions.models import Submission, Vote
 from maeval.traces.models import RunTrace
 
@@ -293,6 +295,176 @@ def test_admin_login_redirects_to_primary_login(client: Client) -> None:
     location = response.headers["Location"]
     assert location.startswith(reverse("web:login"))
     assert "next=/admin/submissions/" in location
+
+
+# --- agent + API-key management (ADR-0009) --------------------------------
+
+
+@pytest.mark.django_db
+def test_agent_management_requires_login(client: Client) -> None:
+    # The whole management surface is login-gated; the list stands in for it.
+    response = client.get(reverse("web:agent_list"))
+    assert response.status_code == 302
+    assert reverse("web:login") in response.headers["Location"]
+
+
+@pytest.mark.django_db
+def test_create_agent_from_browser_links_to_human(client: Client, human: User) -> None:
+    client.force_login(human)
+    response = client.post(reverse("web:agent_create"), {"username": "alice-bot"})
+    assert response.status_code == 302
+    agent = User.objects.get(username="alice-bot")
+    assert agent.is_agent is True
+    assert agent.parent == human
+    # Redirects to the new agent's page.
+    assert response.headers["Location"] == reverse("web:agent_detail", args=[agent.pk])
+
+
+@pytest.mark.django_db
+def test_agent_list_shows_only_own_agents(client: Client, human: User) -> None:
+    mine = User.create_agent(username="mine-bot", parent=human)
+    other_human = User.objects.create_user(username="bob", password=PASSWORD)
+    User.create_agent(username="bob-bot", parent=other_human)
+    client.force_login(human)
+    response = client.get(reverse("web:agent_list"))
+    assert response.status_code == 200
+    assert b"mine-bot" in response.content
+    assert b"bob-bot" not in response.content
+    assert mine  # referenced for clarity
+
+
+@pytest.mark.django_db
+def test_agent_list_shows_last_active(client: Client, human: User) -> None:
+    agent = User.create_agent(username="alice-bot", parent=human)
+    _key, raw = ApiKey.issue(agent=agent, name="ci", scopes=[])
+    client.force_login(human)
+
+    # No key used yet: the agent reads "never used".
+    assert b"never used" in client.get(reverse("web:agent_list")).content
+
+    # After the key authenticates, the row shows a relative "last used … ago".
+    assert (
+        client.get("/api/accounts/me", headers={"authorization": f"Bearer {raw}"}).status_code
+        == 200
+    )
+    body = client.get(reverse("web:agent_list")).content
+    assert b"last used" in body
+    assert b"never used" not in body
+
+
+@pytest.mark.django_db
+def test_issue_key_shows_raw_once_and_stores_hash(client: Client, human: User) -> None:
+    agent = User.create_agent(username="alice-bot", parent=human)
+    client.force_login(human)
+    response = client.post(
+        reverse("web:key_create", args=[agent.pk]),
+        {"name": "laptop", "scopes": ["submissions:write"]},
+    )
+    assert response.status_code == 200
+    key = ApiKey.objects.get(agent=agent, name="laptop")
+    raw = f"mae_{key.prefix}_"
+    # The raw token is present in this one response...
+    assert raw.encode() in response.content
+    # ...and it resolves, while only the hash is stored.
+    body = response.content.decode()
+    start = body.index(f"mae_{key.prefix}_")
+    token = body[start : start + 4 + len(key.prefix) + 1 + 64]
+    assert ApiKey.resolve(token) == key
+    assert token.split("_")[2] not in key.hashed_secret
+
+
+@pytest.mark.django_db
+def test_issue_key_rejects_past_expiry(client: Client, human: User) -> None:
+    agent = User.create_agent(username="alice-bot", parent=human)
+    client.force_login(human)
+    yesterday = (timezone.now() - timedelta(days=1)).date().isoformat()
+    response = client.post(
+        reverse("web:key_create", args=[agent.pk]),
+        {"name": "laptop", "scopes": [], "expires_at": yesterday},
+    )
+    # Form re-renders with an error; no key created.
+    assert response.status_code == 200
+    assert not ApiKey.objects.filter(agent=agent).exists()
+
+
+@pytest.mark.django_db
+def test_cannot_issue_key_for_foreign_agent(client: Client, human: User) -> None:
+    bob = User.objects.create_user(username="bob", password=PASSWORD)
+    bob_bot = User.create_agent(username="bob-bot", parent=bob)
+    client.force_login(human)
+    response = client.post(
+        reverse("web:key_create", args=[bob_bot.pk]),
+        {"name": "steal", "scopes": []},
+    )
+    assert response.status_code == 404
+    assert not ApiKey.objects.filter(agent=bob_bot).exists()
+
+
+@pytest.mark.django_db
+def test_key_detail_shows_last_used(client: Client, human: User) -> None:
+    agent = User.create_agent(username="alice-bot", parent=human)
+    # An expiry so the Expires cell shows a date — the only "Never" left on the
+    # page is then the last-used cell, which we can assert on unambiguously.
+    _key, raw = ApiKey.issue(
+        agent=agent, name="ci", scopes=[], expires_at=timezone.now() + timedelta(days=30)
+    )
+    client.force_login(human)
+    detail_url = reverse("web:agent_detail", args=[agent.pk])
+
+    # A key that has never authenticated reads "Never".
+    assert b"Never" in client.get(detail_url).content
+
+    # Using the key over the API stamps last_used_at (auth.py); the page then
+    # shows a relative "… ago" and no longer "Never".
+    used = client.get("/api/accounts/me", headers={"authorization": f"Bearer {raw}"})
+    assert used.status_code == 200
+    after = client.get(detail_url).content
+    assert b"ago" in after
+    assert b"Never" not in after
+
+
+@pytest.mark.django_db
+def test_revoke_key_from_browser(client: Client, human: User) -> None:
+    agent = User.create_agent(username="alice-bot", parent=human)
+    key, raw = ApiKey.issue(agent=agent, name="ci", scopes=[])
+    client.force_login(human)
+    response = client.post(reverse("web:key_revoke", args=[key.pk]))
+    assert response.status_code == 302
+    assert response.headers["Location"] == reverse("web:agent_detail", args=[agent.pk])
+    key.refresh_from_db()
+    assert key.revoked_at is not None
+    assert ApiKey.resolve(raw) is None
+
+
+@pytest.mark.django_db
+def test_cannot_revoke_foreign_key(client: Client, human: User) -> None:
+    bob = User.objects.create_user(username="bob", password=PASSWORD)
+    bob_bot = User.create_agent(username="bob-bot", parent=bob)
+    key, raw = ApiKey.issue(agent=bob_bot, name="ci", scopes=[])
+    client.force_login(human)
+    response = client.post(reverse("web:key_revoke", args=[key.pk]))
+    assert response.status_code == 404
+    key.refresh_from_db()
+    assert key.revoked_at is None
+    assert ApiKey.resolve(raw) == key
+
+
+@pytest.mark.django_db
+def test_revoke_is_post_only(client: Client, human: User) -> None:
+    agent = User.create_agent(username="alice-bot", parent=human)
+    key, _raw = ApiKey.issue(agent=agent, name="ci", scopes=[])
+    client.force_login(human)
+    response = client.get(reverse("web:key_revoke", args=[key.pk]))
+    assert response.status_code == 405
+
+
+@pytest.mark.django_db
+def test_account_menu_links_to_key_management(client: Client, human: User) -> None:
+    client.force_login(human)
+    response = client.get(reverse("web:home"))
+    body = response.content.decode()
+    assert reverse("web:agent_list") in body
+    assert "API keys" in body
 
 
 @pytest.mark.django_db

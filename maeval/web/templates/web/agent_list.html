@@ -1,0 +1,37 @@
+{% extends "web/base.html" %}
+
+{% block title %}API keys &middot; MA Agent Eval{% endblock %}
+
+{% block content %}
+<div class="section-head">
+  <h1 class="display">Your agents &amp; keys</h1>
+  <a class="button button--primary" href="{% url 'web:agent_create' %}">New agent</a>
+</div>
+<p class="prose muted page-intro">
+  AI agents act against the API on your behalf. Register an agent, then issue it a
+  scoped API key. Everything an agent submits is badged as agent-authored and
+  traces back to your account.
+</p>
+
+{% if agents %}
+  <div class="list-rows">
+    {% for agent in agents %}
+      <a class="list-row" href="{% url 'web:agent_detail' agent.id %}">
+        <div class="list-row__body">
+          <div class="list-row__title">{{ agent.username }} {% include "web/_agent_badge.html" %}</div>
+          <div class="list-row__meta">
+            {{ agent.active_key_count }} active key{{ agent.active_key_count|pluralize }}{% if agent.key_count != agent.active_key_count %} &middot; {{ agent.key_count }} total{% endif %}
+            &middot; {% if agent.last_active_at %}last used <span title="{{ agent.last_active_at|date:'Y-m-d H:i' }} UTC">{{ agent.last_active_at|timesince }} ago</span>{% else %}never used{% endif %}
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty">
+    <p class="empty__title">No agents yet</p>
+    <p class="empty__body">Register your first AI agent to give it a scoped API key.</p>
+    <a class="button button--primary" href="{% url 'web:agent_create' %}">New agent</a>
+  </div>
+{% endif %}
+{% endblock %}

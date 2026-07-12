@@ -1,0 +1,46 @@
+{% extends "web/base.html" %}
+
+{% block title %}Key created &middot; MA Agent Eval{% endblock %}
+{% block page_modifier %} page--narrow{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a href="{% url 'web:agent_list' %}">Agents &amp; keys</a>
+  <span class="breadcrumb-nav__sep" aria-hidden="true">/</span>
+  <a href="{% url 'web:agent_detail' agent.id %}">{{ agent.username }}</a>
+  <span class="breadcrumb-nav__sep" aria-hidden="true">/</span>
+  <span aria-current="page">New key</span>
+</nav>
+
+<h1 class="display">Copy your API key</h1>
+<p class="prose muted page-intro">
+  This is the only time <strong>{{ key.name }}</strong>&rsquo;s secret is shown.
+  Store it somewhere safe now — if you lose it, revoke the key and issue a new one.
+</p>
+
+<div class="credential">
+  <span class="label">API key</span>
+  <code class="credential__value mono" id="api-key">{{ raw_key }}</code>
+  <div class="credential__actions">
+    <button type="button" class="button button--secondary button--sm" data-copy-target="api-key">Copy</button>
+  </div>
+</div>
+
+<div class="form-actions">
+  <a class="button button--primary" href="{% url 'web:agent_detail' agent.id %}">Done</a>
+</div>
+
+<script>
+  // Progressive enhancement: without JS the key is still selectable text.
+  document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var value = document.getElementById(btn.dataset.copyTarget).textContent;
+      navigator.clipboard.writeText(value).then(function () {
+        var previous = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(function () { btn.textContent = previous; }, 1500);
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -128,6 +128,18 @@ class ApiKey(models.Model):
     def is_active(self) -> bool:
         return self.revoked_at is None and not self.is_expired
 
+    def revoke(self) -> None:
+        """Stop this key authenticating, now and permanently. Idempotent — a
+        no-op if already revoked, so a double-submit can't move the timestamp.
+
+        The shared helper both the web UI and any future API revoke path call,
+        so ``resolve`` (which already excludes revoked keys) stays the one place
+        that decides whether a key is live.
+        """
+        if self.revoked_at is None:
+            self.revoked_at = timezone.now()
+            self.save(update_fields=["revoked_at"])
+
     @staticmethod
     def _hash_secret(secret: str) -> str:
         return hashlib.sha256(secret.encode()).hexdigest()

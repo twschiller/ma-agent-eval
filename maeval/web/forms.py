@@ -1,7 +1,9 @@
 """Forms for the web UI. Depends on models only (see tach.toml).
 
-These back the browser write paths (login, signup, create submission). Agent-only
-concerns — API keys, scopes — never appear here; agents act through the API.
+These back the browser write paths (login, signup, create submission, and — for
+a human managing their agents — registering an agent and issuing it an API key,
+ADR-0009). A human self-serves key management here; agents themselves still act
+only through the API.
 """
 
 import hmac
@@ -10,9 +12,19 @@ from typing import ClassVar
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.utils import timezone
 
-from maeval.accounts.models import User
+from maeval.accounts.models import SCOPES, User
 from maeval.submissions.models import Submission
+
+# Human-readable names for the API-key scopes. ``SCOPES`` (the model) stays the
+# source of truth for *which* scopes exist; this only labels them for the browser
+# form, so an unknown scope here would surface as a missing key, not a silent typo.
+SCOPE_LABELS: dict[str, str] = {
+    "submissions:write": "Submit tasks",
+    "submissions:vote": "Upvote tasks",
+    "traces:write": "Record run traces",
+}
 
 
 class FieldStyleMixin:
@@ -71,6 +83,64 @@ class SignupForm(FieldStyleMixin, UserCreationForm):
         if not hmac.compare_digest(provided, expected):
             raise forms.ValidationError("That invite code isn't valid.")
         return provided
+
+
+class AgentForm(FieldStyleMixin, forms.ModelForm):
+    """Register an AI agent under the logged-in human (ADR-0009).
+
+    Only the username is collected — ``is_agent`` and ``parent`` are set from the
+    session principal in the view via ``User.create_agent``, never posted, the
+    same attribution rule the API's ``create_agent`` enforces. A ``ModelForm`` on
+    ``User`` reuses the model's username validator and uniqueness check.
+    """
+
+    class Meta:
+        model = User
+        fields = ("username",)
+
+
+class ApiKeyForm(FieldStyleMixin, forms.Form):
+    """Issue a scoped API key for one of the caller's agents (ADR-0009).
+
+    Scopes are a multi-select over the known set, so an unknown scope can't be
+    submitted (the API rejects one with 422; here the field forbids it). Expiry
+    is optional and must be in the future — mirrors ``issue_key``.
+    """
+
+    name = forms.CharField(
+        max_length=100,
+        help_text="A label to recognize this key later, e.g. “laptop” or “CI runner”.",
+    )
+    scopes = forms.MultipleChoiceField(
+        choices=[(scope, SCOPE_LABELS[scope]) for scope in sorted(SCOPES)],
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        help_text="What this key may do. Grant the least the agent needs.",
+    )
+    expires_at = forms.DateTimeField(
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}),
+        help_text="Optional. The key stops working after this date; blank means it never expires.",
+    )
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        # The style mixin tags every widget with `field-input` (sized for text
+        # boxes); strip it from the checkbox list so the scopes render as plain
+        # checkboxes, not full-width inputs.
+        self.fields["scopes"].widget.attrs.pop("class", None)
+
+    def clean_expires_at(self) -> object:
+        expires_at = self.cleaned_data.get("expires_at")
+        if expires_at is None:
+            return None
+        # A `type="date"` value parses to a naive midnight; anchor it to the
+        # active timezone before comparing so USE_TZ storage stays consistent.
+        if timezone.is_naive(expires_at):
+            expires_at = timezone.make_aware(expires_at)
+        if expires_at <= timezone.now():
+            raise forms.ValidationError("Pick a date in the future.")
+        return expires_at
 
 
 class SubmissionForm(FieldStyleMixin, forms.ModelForm):

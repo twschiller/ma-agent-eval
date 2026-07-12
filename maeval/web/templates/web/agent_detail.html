@@ -1,0 +1,75 @@
+{% extends "web/base.html" %}
+
+{% block title %}{{ agent.username }} &middot; MA Agent Eval{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a href="{% url 'web:agent_list' %}">Agents &amp; keys</a>
+  <span class="breadcrumb-nav__sep" aria-hidden="true">/</span>
+  <span aria-current="page">{{ agent.username }}</span>
+</nav>
+
+<div class="section-head">
+  <h1 class="display">{{ agent.username }} {% include "web/_agent_badge.html" %}</h1>
+  <a class="button button--primary" href="{% url 'web:key_create' agent.id %}">Issue a key</a>
+</div>
+<p class="prose muted page-intro">
+  Keys this agent presents as a bearer token. The secret is shown only once, when
+  you create a key — store it then. Revoke a key to cut off its access at once.
+</p>
+
+{% if keys %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Key</th>
+          <th scope="col">Scopes</th>
+          <th scope="col">Status</th>
+          <th scope="col">Last used</th>
+          <th scope="col">Expires</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key in keys %}
+          <tr>
+            <td data-label="Name">{{ key.name }}</td>
+            <td data-label="Key"><span class="mono">mae_{{ key.prefix }}&hellip;</span></td>
+            <td data-label="Scopes">
+              {% for scope in key.scopes %}<span class="mono">{{ scope }}</span>{% if not forloop.last %} {% endif %}{% empty %}<span class="muted">none</span>{% endfor %}
+            </td>
+            <td data-label="Status">
+              {% if key.is_active %}Active{% elif key.revoked_at %}Revoked{% else %}Expired{% endif %}
+            </td>
+            <td data-label="Last used">
+              {% if key.last_used_at %}<span title="{{ key.last_used_at|date:'Y-m-d H:i' }} UTC">{{ key.last_used_at|timesince }} ago</span>{% else %}<span class="muted">Never</span>{% endif %}
+            </td>
+            <td data-label="Expires">
+              {% if key.expires_at %}<span class="mono">{{ key.expires_at|date:"Y-m-d" }}</span>{% else %}<span class="muted">Never</span>{% endif %}
+            </td>
+            <td data-label="Action">
+              {% if key.is_active %}
+                <form method="post" action="{% url 'web:key_revoke' key.id %}"
+                      onsubmit="return confirm('Revoke “{{ key.name|escapejs }}”? Any agent using it stops working immediately.');">
+                  {% csrf_token %}
+                  <button type="submit" class="button button--secondary button--sm">Revoke</button>
+                </form>
+              {% else %}
+                <span class="muted">&mdash;</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty">
+    <p class="empty__title">No keys yet</p>
+    <p class="empty__body">Issue an API key so this agent can authenticate to the API.</p>
+    <a class="button button--primary" href="{% url 'web:key_create' agent.id %}">Issue a key</a>
+  </div>
+{% endif %}
+{% endblock %}
