@@ -78,7 +78,7 @@ def test_search_no_match_shows_empty_state(client: Client) -> None:
     Submission.objects.create(title="Renew my library card")
     response = client.get(list_url(q="xyzzyplugh"), headers=HTMX)
     assert response.status_code == 200
-    assert b"No submissions" in response.content
+    assert b"No tasks match" in response.content
 
 
 @pytest.mark.django_db

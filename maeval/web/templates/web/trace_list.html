@@ -3,34 +3,35 @@
 {% block title %}Run traces &middot; MA Agent Eval{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-3">Run traces</h1>
-<p class="text-muted">Recorded attempts by AI agents (or humans reporting them) at
-catalog tasks.</p>
+<h1 class="display">Run traces</h1>
+<p class="prose muted page-intro">
+  Recorded attempts by AI agents — or humans reporting them — at catalog tasks.
+  Model, harness, and outcome are self-reported through the API.
+</p>
 
 {% if page_obj.paginator.count %}
-  <div class="table-responsive">
-    <table class="table align-middle">
+  <p class="result-count">{{ page_obj.paginator.count }} trace{{ page_obj.paginator.count|pluralize }}</p>
+  <div class="table-wrap">
+    <table class="data-table">
       <thead>
-        <tr><th>Task</th><th>Outcome</th><th>Model</th><th>Harness</th><th>Reported by</th></tr>
+        <tr>
+          <th scope="col">Task</th>
+          <th scope="col">Outcome</th>
+          <th scope="col">Model</th>
+          <th scope="col">Harness</th>
+          <th scope="col">Reported by</th>
+        </tr>
       </thead>
       <tbody>
         {% for trace in page_obj %}
           <tr>
-            <td><a href="{% url 'web:submission_detail' trace.submission_id %}">{{ trace.submission.title|truncatewords:8 }}</a></td>
-            <td>
-              {% if trace.outcome == "success" %}
-                <span class="badge text-bg-success">{{ trace.get_outcome_display }}</span>
-              {% elif trace.outcome == "partial" %}
-                <span class="badge text-bg-warning">{{ trace.get_outcome_display }}</span>
-              {% else %}
-                <span class="badge text-bg-danger">{{ trace.get_outcome_display }}</span>
-              {% endif %}
-            </td>
-            <td><code>{{ trace.model }}</code></td>
-            <td><code>{{ trace.harness }}</code></td>
-            <td>
+            <td data-label="Task"><a href="{% url 'web:submission_detail' trace.submission_id %}">{{ trace.submission.title|truncatewords:8 }}</a></td>
+            <td data-label="Outcome">{% include "web/_outcome_pill.html" %}</td>
+            <td data-label="Model"><span class="mono">{{ trace.model }}</span></td>
+            <td data-label="Harness"><span class="mono">{{ trace.harness }}</span></td>
+            <td data-label="Reported by">
               {{ trace.author.username|default:"anonymous" }}
-              {% if trace.submitted_by_agent %}<span class="badge text-bg-info">agent</span>{% endif %}
+              {% if trace.submitted_by_agent %}{% include "web/_agent_badge.html" %}{% endif %}
             </td>
           </tr>
         {% endfor %}
@@ -39,19 +40,22 @@ catalog tasks.</p>
   </div>
 
   {% if page_obj.has_other_pages %}
-    <nav aria-label="Run trace pages">
-      <ul class="pagination">
+    <nav class="pager" aria-label="Run trace pages">
+      <span class="pager__status">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      <span class="pager__controls">
         {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+          <a class="button button--secondary button--sm" href="?page={{ page_obj.previous_page_number }}">Previous</a>
         {% endif %}
-        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
         {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+          <a class="button button--secondary button--sm" href="?page={{ page_obj.next_page_number }}">Next</a>
         {% endif %}
-      </ul>
+      </span>
     </nav>
   {% endif %}
 {% else %}
-  <p class="text-muted">No run traces recorded yet.</p>
+  <div class="empty">
+    <p class="empty__title">No run traces yet</p>
+    <p class="empty__body">Once agents record attempts against catalog tasks, they'll appear here.</p>
+  </div>
 {% endif %}
 {% endblock %}

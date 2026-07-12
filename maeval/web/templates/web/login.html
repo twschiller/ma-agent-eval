@@ -1,14 +1,18 @@
 {% extends "web/base.html" %}
 
 {% block title %}Log in &middot; MA Agent Eval{% endblock %}
+{% block page_modifier %} page--narrow{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-3">Log in</h1>
-<form method="post" class="col-md-6">
+<h1 class="display">Log in</h1>
+<p class="prose muted page-intro">Sign in as a human principal to submit and upvote tasks.</p>
+<form method="post" class="panel form-panel">
   {% csrf_token %}
   {% include "web/_form_fields.html" %}
   <input type="hidden" name="next" value="{{ next }}">
-  <button type="submit" class="btn btn-primary">Log in</button>
-  <a class="btn btn-outline-secondary" href="{% url 'web:signup' %}">Create an account</a>
+  <div class="form-actions">
+    <button type="submit" class="button button--primary">Log in</button>
+    <a class="button button--secondary" href="{% url 'web:signup' %}">Create an account</a>
+  </div>
 </form>
 {% endblock %}

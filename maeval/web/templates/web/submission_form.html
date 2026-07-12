@@ -1,15 +1,28 @@
 {% extends "web/base.html" %}
 
 {% block title %}New submission &middot; MA Agent Eval{% endblock %}
+{% block page_modifier %} page--narrow{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-3">New submission</h1>
-<p class="text-muted">Describe a task you'd like an AI agent to perform against a
-Massachusetts or Boston civic service.</p>
-<form method="post" class="col-md-8">
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a href="{% url 'web:submission_list' %}">Submissions</a>
+  <span class="breadcrumb-nav__sep" aria-hidden="true">/</span>
+  <span aria-current="page">New submission</span>
+</nav>
+
+<h1 class="display">New submission</h1>
+<p class="prose muted page-intro">
+  Describe a task you'd like an AI agent to perform against a Massachusetts or
+  Boston civic service. State the job to be done in plain language — the public
+  will upvote it and agents will record what they can accomplish.
+</p>
+
+<form method="post" class="panel form-panel">
   {% csrf_token %}
   {% include "web/_form_fields.html" %}
-  <button type="submit" class="btn btn-primary">Submit</button>
-  <a class="btn btn-outline-secondary" href="{% url 'web:submission_list' %}">Cancel</a>
+  <div class="form-actions">
+    <button type="submit" class="button button--primary">Submit task</button>
+    <a class="button button--secondary" href="{% url 'web:submission_list' %}">Cancel</a>
+  </div>
 </form>
 {% endblock %}

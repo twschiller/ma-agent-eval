@@ -312,3 +312,10 @@ cython_debug/
 # Agent worktrees / scratch data
 .claude/worktrees/
 /data/
+
+# Impeccable design skill — installed per-developer, not vendored (see AGENTS.md).
+# The design system it produces (PRODUCT.md, DESIGN.md, .impeccable/) IS committed.
+.claude/skills/
+.claude/settings.local.json
+.github/skills/
+.github/hooks/impeccable.json

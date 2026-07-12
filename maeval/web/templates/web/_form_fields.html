@@ -1,14 +1,14 @@
-{% comment %}Render a form's fields with Bootstrap markup. Expects `form`.{% endcomment %}
+{% comment %}Render a form's fields with the design-system field markup. Expects `form`.{% endcomment %}
 {% if form.non_field_errors %}
-  <div class="alert alert-danger">
+  <div class="form-error-summary" role="alert">
     {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
   </div>
 {% endif %}
 {% for field in form %}
-  <div class="mb-3">
-    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  <div class="field{% if field.errors %} field--invalid{% endif %}">
+    <label class="field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
     {{ field }}
-    {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
-    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    {% if field.help_text %}<div class="field__help">{{ field.help_text|safe }}</div>{% endif %}
+    {% for error in field.errors %}<div class="field__error">{{ error }}</div>{% endfor %}
   </div>
 {% endfor %}
