@@ -34,6 +34,14 @@ class PrincipalAdmin(UserAdmin):
 class ApiKeyAdmin(admin.ModelAdmin):
     """Read-only view of issued keys; secrets are never shown (hash-only)."""
 
-    list_display = ("name", "agent", "prefix", "created_at", "last_used_at", "revoked_at")
+    list_display = (
+        "name",
+        "agent",
+        "prefix",
+        "created_at",
+        "last_used_at",
+        "expires_at",
+        "revoked_at",
+    )
     search_fields = ("name", "prefix", "agent__username")
     readonly_fields = ("prefix", "hashed_secret", "scopes", "created_at", "last_used_at")

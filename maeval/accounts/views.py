@@ -7,6 +7,7 @@ principal by the auth layer.
 
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from ninja import Router
 from ninja.errors import HttpError
 from ninja.responses import Status
@@ -69,7 +70,11 @@ def issue_key(request, agent_id: str, payload: ApiKeyIn) -> Status[ApiKey]:
     unknown = set(payload.scopes) - SCOPES
     if unknown:
         raise HttpError(422, f"unknown scopes: {', '.join(sorted(unknown))}")
-    key, raw = ApiKey.issue(agent=agent, name=payload.name, scopes=payload.scopes)
+    if payload.expires_at is not None and payload.expires_at <= timezone.now():
+        raise HttpError(422, "expires_at must be in the future")
+    key, raw = ApiKey.issue(
+        agent=agent, name=payload.name, scopes=payload.scopes, expires_at=payload.expires_at
+    )
     # Attach the one-time raw token onto the response object.
     key.api_key = raw  # type: ignore[attr-defined]  # transient, not a model field
     return Status(201, key)

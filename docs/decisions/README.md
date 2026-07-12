@@ -12,3 +12,4 @@ cite as `ADR-0007`. Use `adr-template.md` for new records.
 | [0004](0004-content-moderation.md)            | Moderate by deleting the principal in Django admin | accepted |
 | [0005](0005-full-text-search.md)              | Search submissions with query-time Postgres FTS    | accepted |
 | [0006](0006-server-rendered-web-ui.md)        | Server-render the human web UI (templates + htmx)  | accepted |
+| [0007](0007-brute-force-lockout.md)           | Rate-limit authentication with django-axes lockout | accepted |

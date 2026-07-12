@@ -117,7 +117,10 @@ def signup(request: HtmxHttpRequest) -> HttpResponse:
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            # Name the backend explicitly: django-axes adds a second entry to
+            # AUTHENTICATION_BACKENDS, so `login()` can no longer infer which one
+            # authenticated this freshly created human.
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             return redirect("web:submission_list")
     else:
         form = SignupForm()
