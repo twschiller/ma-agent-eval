@@ -32,7 +32,7 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   `maeval/submissions/views.py:18`
 - FR-2. Each submission exposes `id` (ULID), `title`, `description`,
   `submitted_by_agent`, `upvote_count`, and `author` (the authoring principal's
-  username, or `null` once removed). — `maeval/submissions/schemas.py:14`
+  username, or `null` for author-less seed rows). — `maeval/submissions/schemas.py:14`
 - FR-3. An authenticated principal can create a submission. `author` and
   `submitted_by_agent` are derived from the caller, never the request body; an
   agent's submission is flagged `submitted_by_agent = true` and attributed to
@@ -50,7 +50,7 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 
 - Run traces (model/harness/tools/outcome) — separate spec/app.
 - Auth, accounts, and API-key issuance — separate spec/app (see `accounts.md`).
-- Content moderation / admin deletion — separate spec/app.
+- Content moderation / admin deletion — see `moderation.md` (ADR-0004).
 
 ## Future work
 

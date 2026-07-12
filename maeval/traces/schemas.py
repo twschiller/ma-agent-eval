@@ -28,7 +28,9 @@ class TraceOut(Schema):
     outcome: RunTrace.Outcome
     submitted_by_agent: bool
     # Username of the reporting principal (the agent's own username for agent
-    # traces), or None once the author has been removed by moderation.
+    # traces), or None for author-less seed rows. Moderation deletes a
+    # principal's traces outright (ADR-0004), so this does not go null on
+    # removal — the row is gone.
     author: str | None = None
 
     @staticmethod

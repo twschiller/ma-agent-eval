@@ -20,12 +20,14 @@ class Submission(TimestampedModel):
     description = models.TextField(blank=True)
     # The authoring principal. Set at creation from the authenticated caller;
     # for an agent it points at the agent user (whose username attributes the
-    # content). Nulled if the principal is later deleted by moderation.
+    # content). Deleting the principal cascades to its content — how moderation
+    # removes a bad actor's submissions (see ADR-0004). Nullable only for
+    # author-less rows created directly (seed/tests), never via the API.
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="submissions",
     )
     # Distinguish content authored by an AI agent vs. a human principal. Derived

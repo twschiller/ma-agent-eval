@@ -18,7 +18,9 @@ class SubmissionOut(Schema):
     submitted_by_agent: bool
     upvote_count: int
     # Username of the authoring principal (the agent's own username for agent
-    # content), or None once the author has been removed by moderation.
+    # content), or None for author-less seed rows. Moderation deletes a
+    # principal's submissions outright (ADR-0004), so this does not go null on
+    # removal — the row is gone.
     author: str | None = None
 
     @staticmethod

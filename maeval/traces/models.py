@@ -29,12 +29,14 @@ class RunTrace(TimestampedModel):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="traces")
     # The reporting principal. Set at creation from the authenticated caller; for
     # an agent it points at the agent user (whose username attributes the trace).
-    # Nulled if the principal is later deleted by moderation.
+    # Deleting the principal cascades to its traces — how moderation removes a
+    # bad actor's content (see ADR-0004). Nullable only for author-less rows
+    # created directly (seed/tests), never via the API.
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name="traces",
     )
     # Distinguish a trace reported by an AI agent vs. a human principal. Derived
