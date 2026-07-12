@@ -1,0 +1,6 @@
+{
+  "files": ["maeval/web/templates/web/base.html"],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}
