@@ -15,3 +15,4 @@ cite as `ADR-0007`. Use `adr-template.md` for new records.
 | [0007](0007-brute-force-lockout.md)           | Rate-limit authentication with django-axes lockout | accepted |
 | [0008](0008-invite-only-signup.md)            | Gate signup with a shared invite code from the env | accepted |
 | [0009](0009-browser-agent-key-management.md)  | Manage agents and API keys from the human web UI   | accepted |
+| [0010](0010-content-security-policy.md)       | Enforce a strict same-origin CSP (Django built-in) | accepted |

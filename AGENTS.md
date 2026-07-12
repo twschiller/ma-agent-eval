@@ -22,6 +22,7 @@ tools, outcome). See `BRIEF.md` for the working-group context.
 - Postgres (Neon in prod, local Postgres for dev) via `dj-database-url`.
 - pyright (types), ruff (lint + format), semgrep (project static analysis),
   bandit (Python security), tach (import boundaries), pytest, pre-commit.
+  Biome (`biome.json`) lints + formats the hand-written web JS.
 - Deployed to Fly.io (one always-warm machine); static assets served by WhiteNoise.
 
 ## Layout

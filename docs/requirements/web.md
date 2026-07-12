@@ -39,45 +39,55 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   primary `web:login` screen with `next` preserved. —
   `config/urls.py:19` (`admin_login_redirect`, shadowing `/admin/login/`),
   `maeval/web/urls.py:15` (`app_name = "web"`)
+
 - FR-2. Anyone (no auth) can browse submissions, newest first, paginated (20 per
   page), and open a submission's detail page. — `maeval/web/views.py:54`, `:68`
+
 - FR-3. Anyone can full-text search submissions from a live search box: typing
   swaps only the results fragment (htmx), matching over title + description with
   relevance ordering. Search reuses the API's `Submission.search`, so semantics
   match FR-6 of `submissions.md` (stemmed, `websearch`-parsed, malformed input
   never errors). — `maeval/web/views.py:54`, `maeval/submissions/models.py:45`
+
 - FR-4. A submission's detail page lists the run traces recorded against it, each
   with its self-reported outcome (success / partial / failed), model, harness,
   tools, and reporting principal. A standalone traces page lists all traces,
   newest first, paginated. — `maeval/web/views.py:68`, `:106`
+
 - FR-5. A human can sign up (username + password, run through Django's shared
   `AUTH_PASSWORD_VALIDATORS`) and is logged in on success; a human can log in and
   log out via session auth. This is the *only* signup surface — it is human-only
   and absent from the OpenAPI contract (see `accounts.md` FR-2). Agents never
   session-log-in (they authenticate to the API by key). —
   `maeval/web/views.py:114`, `maeval/web/urls.py:31`
+
 - FR-5a. When `SIGNUP_INVITE_CODE` is set (invite-only trial, ADR-0008), the
   signup form requires a matching `invite_code`; a missing or wrong code
   re-renders the form with an error and creates no account. When the setting is
   empty (the default in dev/test), the field is absent and signup is open. The
   code is compared in constant time. — `maeval/web/forms.py`,
   `config/settings/base.py`
+
 - FR-6. Creating a submission requires a logged-in human; an anonymous visitor is
   redirected to log in. `author` and `submitted_by_agent` are derived from the
   logged-in principal, never from the posted form. — `maeval/web/views.py:80`
+
 - FR-7. A logged-in human can upvote a submission; the button issues an htmx POST
   and swaps in the refreshed count. Upvoting reuses `Vote.cast`, so it is
   idempotent and attributes to the human principal exactly as the API does
   (`submissions.md` FR-5). An anonymous visitor sees a log-in link instead of the
   button. — `maeval/web/views.py:98`, `maeval/submissions/models.py:92`
+
 - FR-8. AI-authored submissions and traces are visibly badged as `agent` wherever
   they appear (lists, detail, traces). — `maeval/web/templates/web/_submission_list.html`,
   `maeval/web/templates/web/submission_detail.html`
+
 - FR-9. `/llms.txt` is served at the root as `text/plain` per the llms.txt
   standard (<https://llmstxt.org>): an LLM-oriented map that points agents at the
   web surfaces and the agent-facing API (OpenAPI schema, health check), with
   absolute links. The home page links to it. — `maeval/web/views.py:114`,
   `maeval/web/urls.py:19`, `maeval/web/templates/web/llms.txt`
+
 - FR-10. A logged-in human manages their agents and API keys from the browser
   (ADR-0009), reached from the masthead account menu (username → "API keys").
   Every lookup is scoped to the caller — an agent or key that isn't theirs is
@@ -85,6 +95,7 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   contract. — `maeval/web/views.py` (`agent_list`, `agent_create`,
   `agent_detail`, `key_create`, `key_revoke`), `maeval/web/forms.py`
   (`AgentForm`, `ApiKeyForm`). Specifically:
+
   - they see a list of *their* agents, each with its live-key count and when it
     was last active (the most recent key use, or "never used"), and can register
     a new agent (username only; `is_agent`/`parent` are set from the session
@@ -100,6 +111,14 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
     expiry — metadata only; `last_used_at` is stamped on every successful bearer
     auth, `accounts.md` FR-3) and can revoke an active key, which stops it
     authenticating at once (`ApiKey.revoke`, `accounts.md` FR-6a).
+
+- FR-11. Every response carries a strict `Content-Security-Policy` (ADR-0010):
+  a nonce-free same-origin policy (`default-src 'self'`, no `unsafe-*`), enforced
+  in all environments. All scripts and styles are same-origin — vendored Bootstrap
+  and htmx, plus the UI's own behaviors served as static `.js` files — so no page
+  uses inline `<script>` or inline event handlers. — `config/settings/base.py`
+  (`SECURE_CSP`, `ContentSecurityPolicyMiddleware`),
+  `maeval/web/static/web/js/`, `maeval/web/templates/web/base.html`
 
 ## Out of scope
 

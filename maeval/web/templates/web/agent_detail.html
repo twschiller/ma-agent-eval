@@ -51,8 +51,11 @@
             </td>
             <td data-label="Action">
               {% if key.is_active %}
+                {% comment %}Confirmation is wired by web/js/confirm-submit.js
+                  (loaded in base.html); a strict CSP forbids inline `onsubmit`.
+                  ADR-0010.{% endcomment %}
                 <form method="post" action="{% url 'web:key_revoke' key.id %}"
-                      onsubmit="return confirm('Revoke “{{ key.name|escapejs }}”? Any agent using it stops working immediately.');">
+                      data-confirm="Revoke “{{ key.name }}”? Any agent using it stops working immediately.">
                   {% csrf_token %}
                   <button type="submit" class="button button--secondary button--sm">Revoke</button>
                 </form>

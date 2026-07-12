@@ -480,3 +480,35 @@ def test_trace_list_renders(client: Client) -> None:
     assert response.status_code == 200
     assert b"claude-opus-4-8" in response.content
     assert b"Partially successful" in response.content
+
+
+# --- Content-Security-Policy (ADR-0010) ---------------------------------------
+
+
+@pytest.mark.django_db
+def test_response_carries_strict_csp_header(client: Client) -> None:
+    response = client.get(reverse("web:home"))
+    csp = response.headers["Content-Security-Policy"]
+    # Strict same-origin: no `unsafe-*`, script/style locked to `'self'`.
+    assert "script-src 'self'" in csp
+    assert "style-src 'self'" in csp
+    assert "object-src 'none'" in csp
+    assert "unsafe-" not in csp
+
+
+@pytest.mark.django_db
+def test_templates_carry_no_inline_script(client: Client, human: User) -> None:
+    """Inline `<script>` / `on*=` handlers would need `unsafe-inline`; the CSP
+    forbids it, so behavior must live in static files. Guards the whole rendered
+    surface a logged-in user touches for the key flows."""
+    agent = User.create_agent(username="alice-bot", parent=human)
+    ApiKey.issue(agent=agent, name="ci", scopes=[])
+    client.force_login(human)
+    for name, args in [
+        ("web:home", []),  # base.html: account-menu + confirm-submit scripts
+        ("web:agent_detail", [agent.pk]),  # was inline `onsubmit` on revoke
+        ("web:key_create", [agent.pk]),  # was inline expiry-preset script
+    ]:
+        body = client.get(reverse(name, args=args)).content.decode()
+        assert "<script>" not in body, name
+        assert "onsubmit=" not in body, name
