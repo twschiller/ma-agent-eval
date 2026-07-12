@@ -4,9 +4,11 @@ These back the browser write paths (login, signup, create submission). Agent-onl
 concerns — API keys, scopes — never appear here; agents act through the API.
 """
 
+import hmac
 from typing import ClassVar
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 from maeval.accounts.models import User
@@ -40,11 +42,35 @@ class SignupForm(FieldStyleMixin, UserCreationForm):
     (``is_agent=False``, ``parent=None``). Password strength is enforced by
     ``AUTH_PASSWORD_VALIDATORS`` via ``UserCreationForm``, matching the API's
     ``/accounts/signup``.
+
+    When ``SIGNUP_INVITE_CODE`` is set the form grows a required ``invite_code``
+    field gating registration (invite-only trial, ADR-0008); when it is empty the
+    field is absent and signup is open.
     """
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = ("username",)
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        if settings.SIGNUP_INVITE_CODE:
+            # Added after the mixin has tagged the base fields, so carry the
+            # design-system class on the widget ourselves.
+            self.fields["invite_code"] = forms.CharField(
+                label="Invite code",
+                help_text="This trial is invite-only. Enter the code you were given.",
+                widget=forms.TextInput(attrs={"class": "field-input", "autocomplete": "off"}),
+            )
+
+    def clean_invite_code(self) -> str:
+        # Only reached when the field exists (i.e. a code is configured).
+        expected = settings.SIGNUP_INVITE_CODE
+        provided = self.cleaned_data.get("invite_code", "")
+        # Constant-time compare so response timing can't leak the code.
+        if not hmac.compare_digest(provided, expected):
+            raise forms.ValidationError("That invite code isn't valid.")
+        return provided
 
 
 class SubmissionForm(FieldStyleMixin, forms.ModelForm):

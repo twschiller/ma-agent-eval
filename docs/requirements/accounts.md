@@ -87,4 +87,5 @@ Only items with a backing issue or ADR.
 
 - Key revocation and listing endpoints (issue/list/revoke lifecycle) — TBD.
 - Signup rate limiting / abuse controls (axes covers auth failures, not new-account
-  creation) — TBD.
+  creation). An invite-code gate (`SIGNUP_INVITE_CODE`, ADR-0008, `web.md` FR-5a)
+  restricts *who* can sign up for the trial, but is not a rate limit — TBD.
