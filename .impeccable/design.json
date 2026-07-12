@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-12T00:00:00Z",
+  "title": "Design System: MA Agent Eval",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "neutral", "displayName": "Harbor Ink", "canonical": "oklch(0.23 0.015 250)", "tonalRamp": ["#0d1114", "#181e24", "#242c33", "#3a444c", "#50565c", "#7b838a", "#a8afb5", "#dbdee2"] },
+      "ink-muted": { "role": "neutral", "displayName": "Slate Muted", "canonical": "oklch(0.45 0.012 250)", "tonalRamp": ["#2a3036", "#3a444c", "#50565c", "#6a7178", "#8b9298", "#aeb4b9", "#cfd3d7", "#eef0f2"] },
+      "surface": { "role": "neutral", "displayName": "Surface White", "canonical": "oklch(1 0 0)", "tonalRamp": ["#f1f4f7", "#f5f7fa", "#fafbfc", "#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"] },
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "oklch(0.976 0.004 250)", "tonalRamp": ["#e6eaee", "#eef1f4", "#f1f4f7", "#f5f7fa", "#f8fafb", "#fbfcfd", "#fdfdfe", "#ffffff"] },
+      "primary": { "role": "primary", "displayName": "Harbor Blue", "canonical": "oklch(0.45 0.13 245)", "tonalRamp": ["#00243f", "#003a63", "#005694", "#0d6fb5", "#3a8bcc", "#6ba9db", "#9fc8e9", "#dff1ff"] },
+      "ember": { "role": "secondary", "displayName": "Civic Ember", "canonical": "oklch(0.50 0.15 48)", "tonalRamp": ["#4d1e00", "#742d00", "#a44000", "#cf6f19", "#e08c3f", "#eaa96e", "#f2c8a0", "#fbe8d6"] },
+      "success": { "role": "tertiary", "displayName": "Success Green", "canonical": "oklch(0.48 0.13 150)", "tonalRamp": ["#023d1a", "#055426", "#067132", "#0c9145", "#2fb066", "#69cb92", "#a6e2be", "#def1e1"] },
+      "partial": { "role": "tertiary", "displayName": "Partial Amber", "canonical": "oklch(0.50 0.11 78)", "tonalRamp": ["#4a3200", "#664500", "#855a00", "#a67400", "#c8961f", "#e0b85c", "#efd79c", "#fdecd1"] },
+      "failed": { "role": "tertiary", "displayName": "Failed Red", "canonical": "oklch(0.50 0.20 27)", "tonalRamp": ["#5e0208", "#8a060f", "#bb0916", "#d92634", "#e85b64", "#f2909a", "#f9c3c9", "#ffe2dd"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles, one per view." },
+      "headline": { "displayName": "Headline", "purpose": "Section headers within a page." },
+      "title": { "displayName": "Title", "purpose": "Card and list-item titles." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and prose; cap at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Form labels, table heads, meta keys." },
+      "mono": { "displayName": "Mono", "purpose": "Machine facts: models, harnesses, tools, IDs, timestamps, keys." }
+    },
+    "shadows": [
+      { "name": "overlay", "value": "0 4px 16px rgba(24,30,36,0.12)", "purpose": "Dropdowns, popovers, htmx live-search results panel." },
+      { "name": "modal", "value": "0 12px 32px rgba(24,30,36,0.18)", "purpose": "Dialogs and moderation/delete confirmations." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.2, 0, 0, 1)", "purpose": "Default ease-out for state transitions, 150ms." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Hover, focus, and htmx swap transitions." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "576px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "992px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single most important action per view (Submit, Log in, Save).",
+      "html": "<button class=\"ds-btn-primary\">Submit</button>",
+      "css": ".ds-btn-primary { font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 1rem; background: #005694; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; transition: background 150ms cubic-bezier(0.2,0,0,1); } .ds-btn-primary:hover { background: #181e24; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #005694; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary actions (Cancel, Browse).",
+      "html": "<button class=\"ds-btn-secondary\">Browse submissions</button>",
+      "css": ".ds-btn-secondary { font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 1rem; background: #fff; color: #181e24; padding: 8px 16px; border: 1px solid #c0c5c9; border-radius: 6px; cursor: pointer; transition: background 150ms cubic-bezier(0.2,0,0,1); } .ds-btn-secondary:hover { background: #f5f7fa; } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #005694; }"
+    },
+    {
+      "name": "Upvote Control",
+      "kind": "button",
+      "refersTo": "button-upvote",
+      "description": "The demand signal. Warm ember; the only interactive control that uses ember. Voted state fills ember.",
+      "html": "<button class=\"ds-upvote\" aria-pressed=\"false\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 2 L11 10 L1 10 Z\" fill=\"currentColor\"/></svg><span>128</span></button>",
+      "css": ".ds-upvote { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.875rem; background: #fff; color: #a44000; padding: 6px 12px; border: 1px solid #a44000; border-radius: 6px; cursor: pointer; transition: background 150ms cubic-bezier(0.2,0,0,1), color 150ms; } .ds-upvote:hover { background: #fbe8d6; } .ds-upvote[aria-pressed=\"true\"] { background: #cf6f19; color: #fff; border-color: #cf6f19; } .ds-upvote:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #a44000; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Standard text/search field. Full-contrast placeholder, blue focus ring.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search submissions\">",
+      "css": ".ds-input { font-family: 'Public Sans', system-ui, sans-serif; font-size: 1rem; color: #181e24; background: #fff; padding: 8px 12px; border: 1px solid #c0c5c9; border-radius: 6px; width: 100%; box-sizing: border-box; transition: border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: #50565c; } .ds-input:focus-visible { outline: none; border-color: #005694; box-shadow: 0 0 0 2px #dff1ff; }"
+    },
+    {
+      "name": "Outcome Pill (Partial)",
+      "kind": "chip",
+      "refersTo": "pill-outcome-partial",
+      "description": "Run-trace outcome. Tint fill + matching text + icon + word. Color is never the sole signal.",
+      "html": "<span class=\"ds-pill-partial\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 1 a5 5 0 0 1 0 10 Z\" fill=\"currentColor\"/><circle cx=\"6\" cy=\"6\" r=\"5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg>Partial</span>",
+      "css": ".ds-pill-partial { display: inline-flex; align-items: center; gap: 5px; font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.8125rem; background: #fdecd1; color: #855a00; padding: 2px 10px; border-radius: 999px; }"
+    },
+    {
+      "name": "Agent Badge",
+      "kind": "chip",
+      "refersTo": "badge-agent",
+      "description": "Marks AI-agent-authored content. Glyph + label carry the meaning; survives grayscale.",
+      "html": "<span class=\"ds-badge-agent\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><rect x=\"2\" y=\"4\" width=\"8\" height=\"6\" rx=\"1.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\"/><circle cx=\"4.5\" cy=\"7\" r=\"0.8\" fill=\"currentColor\"/><circle cx=\"7.5\" cy=\"7\" r=\"0.8\" fill=\"currentColor\"/><path d=\"M6 1.5 V4\" stroke=\"currentColor\" stroke-width=\"1.2\"/></svg>AI agent</span>",
+      "css": ".ds-badge-agent { display: inline-flex; align-items: center; gap: 4px; font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.75rem; background: #dff1ff; color: #005694; padding: 1px 8px; border-radius: 4px; }"
+    },
+    {
+      "name": "Submission Row",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A scannable list row: title, agent/human authorship, and the ember demand count right-aligned. Flat, border-separated.",
+      "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-row-main\"><span class=\"ds-row-title\">Renew my library card</span><span class=\"ds-badge-agent\">AI agent</span></span><span class=\"ds-row-demand\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 2 L11 10 L1 10 Z\" fill=\"currentColor\"/></svg>128</span></a>",
+      "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: #fff; border: 1px solid #dbdee2; text-decoration: none; color: #181e24; transition: background 150ms; } .ds-row + .ds-row { border-top: none; } .ds-row:hover { background: #f5f7fa; } .ds-row-main { display: inline-flex; align-items: center; gap: 8px; } .ds-row-title { font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 1.25rem; } .ds-row-demand { display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.875rem; color: #a44000; } .ds-badge-agent { display: inline-flex; align-items: center; font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.75rem; background: #dff1ff; color: #005694; padding: 1px 8px; border-radius: 4px; }"
+    },
+    {
+      "name": "Masthead",
+      "kind": "nav",
+      "refersTo": "masthead",
+      "description": "Government-masthead top bar: solid Harbor Ink, white wordmark, blue underline on the current section.",
+      "html": "<nav class=\"ds-masthead\"><span class=\"ds-brand\">MA Agent Eval</span><span class=\"ds-navlinks\"><a class=\"ds-navlink ds-navlink-current\" href=\"#\">Submissions</a><a class=\"ds-navlink\" href=\"#\">Run traces</a></span></nav>",
+      "css": ".ds-masthead { display: flex; align-items: center; gap: 24px; background: #181e24; color: #fff; padding: 12px 16px; font-family: 'Public Sans', system-ui, sans-serif; } .ds-brand { font-weight: 700; font-size: 1.125rem; } .ds-navlinks { display: inline-flex; gap: 16px; } .ds-navlink { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.9375rem; padding: 4px 0; border-bottom: 2px solid transparent; } .ds-navlink:hover { border-bottom-color: #6ba9db; } .ds-navlink-current { border-bottom-color: #0d6fb5; } .ds-navlink:focus-visible { outline: none; box-shadow: 0 0 0 2px #005694; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Public Ledger",
+    "overview": "This is a civic instrument, not a product being sold. It reads like a well-kept public record — sober, legible, built to be trusted at a glance by people making real decisions about public infrastructure. The system is organized around the product's two honest halves: public demand is warm and human (a single burnt-ember signal reserved for upvotes and 'most wanted'), and agent capability is cool and technical (a deep harbor blue for actions, links, and selection, with monospaced type for the machine facts). Warmth means people; blue means machines; the neutral ink-on-white frame is the civic institution around them.",
+    "keyCharacteristics": [
+      "Two-axis color: warm ember for demand, cool harbor blue for capability, sober ink frame around both.",
+      "Flat and border-defined, like USWDS/GOV.UK — depth from tone and rule, not shadow.",
+      "Public Sans (the US Web Design System's civic typeface) + IBM Plex Mono for machine data.",
+      "Scannability over decoration: hierarchy, alignment, and consistent pills do the work.",
+      "WCAG 2.1 AAA where feasible — every text color is verified against its surface."
+    ],
+    "rules": [
+      { "name": "The Two-Axis Rule", "body": "Ember is demand, blue is capability. Ember appears only in the upvote/demand context; blue carries every interactive action. Never swap them.", "section": "colors" },
+      { "name": "The One-Ember Rule", "body": "Civic Ember covers <=10% of any screen and marks demand and nothing else.", "section": "colors" },
+      { "name": "The Machine-Facts-Are-Mono Rule", "body": "Anything a machine produced or identifies — model, harness, tool, run ID, timestamp, key — is set in IBM Plex Mono; human prose is Public Sans.", "section": "typography" },
+      { "name": "The No-Eyebrow Rule", "body": "No tiny uppercase tracked kicker above sections, and no 01/02/03 numbered section markers.", "section": "typography" },
+      { "name": "The Flat-Civic Rule", "body": "Surfaces are flat at rest, separated by border and tone. Shadow signals transience, never decoration.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Harbor Blue for every interactive action and Civic Ember for demand only.",
+      "Do set every machine fact in IBM Plex Mono and human prose in Public Sans.",
+      "Do mark AI-agent content with the 'AI agent' glyph-and-label badge, and give every outcome pill an icon + word so meaning survives grayscale.",
+      "Do keep surfaces flat: 1px borders and tonal layering, shadows only on floating overlays and modals.",
+      "Do hold text contrast to the verified values: Harbor Ink 16.9:1, Slate Muted 7.4:1, Harbor Blue 7.6:1.",
+      "Do use a modest 6px radius on controls and 8px on cards."
+    ],
+    "donts": [
+      "Don't ship the generic Bootstrap default: no stock bg-dark navbar, no display-6 hero, no default list-group.",
+      "Don't produce the generic AI-generated app: no identical icon+heading+text card grids, no hero-metric template, no gradient accents, no 01/02/03 numbered scaffolding.",
+      "Don't add tiny uppercase tracked eyebrows above sections.",
+      "Don't drift flashy AI/SaaS: no gradient heroes, no glassmorphism, no gradient text, no hype copy.",
+      "Don't slide into dated government bureaucracy: no wall-to-wall form density, no cluttered municipal-portal layouts.",
+      "Don't go playful consumer: no over-rounded pills-as-buttons, no emoji, no gamification.",
+      "Don't use a colored side-stripe border on cards, rows, or alerts.",
+      "Don't signal agent/human, outcome, or error by color alone — always pair with icon and/or text.",
+      "Don't let Civic Ember exceed ~10% of a screen or leak outside the demand context."
+    ]
+  }
+}
