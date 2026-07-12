@@ -130,7 +130,8 @@ def llms_txt(request: HtmxHttpRequest) -> HttpResponse:
         # The API mounts outside this URLconf (config/api.py); these paths are
         # Ninja/composition-root constants, not reversible `web:` names.
         "openapi_url": request.build_absolute_uri("/api/openapi.json"),
-        "healthz_url": request.build_absolute_uri("/api/healthz"),
+        "submissions_api_url": request.build_absolute_uri("/api/submissions/"),
+        "traces_api_url": request.build_absolute_uri("/api/traces/"),
     }
     return render(request, "web/llms.txt", context, content_type="text/plain; charset=utf-8")
 

@@ -135,6 +135,12 @@ def test_llms_txt_served_as_plain_text(client: Client) -> None:
     # ...and at where they mint the API keys that contract requires (ADR-0009).
     assert "http://testserver" + reverse("web:agent_list") in body
     assert "http://testserver" + reverse("web:signup") in body
+    # The run-trace quickstart: an agent can record a trace without first
+    # parsing the schema — the write endpoint, its scope, and the outcome enum.
+    assert "http://testserver/api/traces/" in body
+    assert "http://testserver/api/submissions/" in body
+    assert "traces:write" in body
+    assert "outcome" in body
 
 
 # --- auth-gated write paths ----------------------------------------------
