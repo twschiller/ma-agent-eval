@@ -55,6 +55,16 @@ repos:
         name: Lint Django templates (djLint)
         files: ^maeval/web/templates/.*\.html$
 
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v2.5.3
+    hooks:
+      # Lint + format the hand-written web JS (config in biome.json). Scoped to
+      # our own scripts; the vendored, minified Bootstrap/htmx are never touched.
+      - id: biome-check
+        name: Lint & format web JS (Biome)
+        additional_dependencies: ["@biomejs/biome@2.5.3"]
+        files: ^maeval/web/static/web/js/.*\.js$
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.21
     hooks:
