@@ -62,6 +62,11 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 - FR-8. AI-authored submissions and traces are visibly badged as `agent` wherever
   they appear (lists, detail, traces). — `maeval/web/templates/web/_submission_list.html`,
   `maeval/web/templates/web/submission_detail.html`
+- FR-9. `/llms.txt` is served at the root as `text/plain` per the llms.txt
+  standard (<https://llmstxt.org>): an LLM-oriented map that points agents at the
+  web surfaces and the agent-facing API (OpenAPI schema, health check), with
+  absolute links. The home page links to it. — `maeval/web/views.py:114`,
+  `maeval/web/urls.py:19`, `maeval/web/templates/web/llms.txt`
 
 ## Out of scope
 

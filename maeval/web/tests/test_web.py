@@ -113,6 +113,25 @@ def test_agent_content_is_badged(client: Client) -> None:
     assert b"agent" in response.content
 
 
+@pytest.mark.django_db
+def test_home_links_to_llms_txt(client: Client) -> None:
+    response = client.get(reverse("web:home"))
+    assert reverse("web:llms_txt") in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_llms_txt_served_as_plain_text(client: Client) -> None:
+    response = client.get(reverse("web:llms_txt"))
+    assert response.status_code == 200
+    assert response["Content-Type"] == "text/plain; charset=utf-8"
+    body = response.content.decode()
+    # The llms.txt standard: an H1 title, then a `>` summary blockquote.
+    assert body.startswith("# MA Agent Eval\n")
+    assert "\n> " in body
+    # Points agents at the API contract with an absolute link.
+    assert "http://testserver/api/openapi.json" in body
+
+
 # --- auth-gated write paths ----------------------------------------------
 
 

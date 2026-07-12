@@ -16,6 +16,7 @@ app_name = "web"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("llms.txt", views.llms_txt, name="llms_txt"),
     path("submissions/", views.submission_list, name="submission_list"),
     # "new" is declared before the "<submission_id>" catch to keep it a page,
     # not a submission lookup.
