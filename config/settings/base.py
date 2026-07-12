@@ -6,6 +6,7 @@ hardcode secrets.
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -25,6 +26,13 @@ def env_required(key: str) -> str:
     if value is None:
         raise ImproperlyConfigured(f"Set the {key} environment variable")
     return value
+
+
+def env_int(key: str, default: int) -> int:
+    raw = os.environ.get(key)
+    if raw is None or not raw.strip():
+        return default
+    return int(raw)
 
 
 def env_bool(key: str, default: bool = False) -> bool:
@@ -61,6 +69,9 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     # Third-party
     "django_htmx",
+    # Brute-force / credential-stuffing protection for the login + HTTP Basic
+    # auth paths (records failed attempts, locks out after a threshold).
+    "axes",
     # Local apps
     "maeval.common",
     "maeval.accounts",
@@ -89,7 +100,32 @@ MIDDLEWARE = [
     # Sets `request.htmx` for the web UI; needs the session/auth middleware
     # above it. See ADR-0006.
     "django_htmx.middleware.HtmxMiddleware",
+    # Must come last and after AuthenticationMiddleware: axes wraps the login
+    # flow to record failures and short-circuit locked-out callers.
+    "axes.middleware.AxesMiddleware",
 ]
+
+# django-axes plugs in as an authentication backend (checked first) so a
+# locked-out principal is rejected before the real backend runs. AxesStandalone
+# only enforces the lockout; ModelBackend still verifies the password.
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# Brute-force lockout policy (django-axes). Lock on the (username, IP) pair so a
+# shared NAT / office IP can't lock out unrelated users, while still stopping a
+# password-guessing run against one account. Applies to the web login form and
+# the API's HTTP Basic path — both route through Django's `authenticate()`.
+AXES_FAILURE_LIMIT = env_int("DJANGO_AXES_FAILURE_LIMIT", 5)
+AXES_COOLOFF_TIME = timedelta(minutes=env_int("DJANGO_AXES_COOLOFF_MINUTES", 30))
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_HTTP_RESPONSE_CODE = 429
+# Behind Fly's proxy the client IP arrives in X-Forwarded-For; trust it for
+# attribution (the same proxy already terminates TLS, see SECURE_PROXY_SSL_HEADER
+# in production settings). REMOTE_ADDR is the local fallback for dev.
+AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 
 ROOT_URLCONF = "config.urls"
 

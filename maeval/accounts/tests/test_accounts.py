@@ -1,6 +1,7 @@
 """Tests for identity: signup, agent creation, API keys, and auth."""
 
 import base64
+from datetime import timedelta
 
 import pytest
 from django.db import IntegrityError
@@ -191,6 +192,79 @@ def test_revoked_key_does_not_resolve(client: Client) -> None:
     key.revoked_at = timezone.now()
     key.save(update_fields=["revoked_at"])
     assert ApiKey.resolve(raw) is None
+
+
+# --- API-key expiry -------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_expired_key_does_not_resolve(client: Client) -> None:
+    human = User.objects.create_user(username="alice", password=PASSWORD)
+    agent = User.create_agent(username="alice-bot", parent=human)
+    _key, raw = ApiKey.issue(
+        agent=agent,
+        name="short-lived",
+        scopes=[],
+        expires_at=timezone.now() - timedelta(seconds=1),
+    )
+    assert ApiKey.resolve(raw) is None
+
+
+@pytest.mark.django_db
+def test_future_expiry_key_still_resolves(client: Client) -> None:
+    human = User.objects.create_user(username="alice", password=PASSWORD)
+    agent = User.create_agent(username="alice-bot", parent=human)
+    key, raw = ApiKey.issue(
+        agent=agent,
+        name="valid",
+        scopes=[],
+        expires_at=timezone.now() + timedelta(hours=1),
+    )
+    assert ApiKey.resolve(raw) == key
+
+
+@pytest.mark.django_db
+def test_issue_key_accepts_future_expiry(client: Client) -> None:
+    human = User.objects.create_user(username="alice", password=PASSWORD)
+    agent = User.create_agent(username="alice-bot", parent=human)
+    expires = timezone.now() + timedelta(days=30)
+    response = client.post(
+        f"/api/accounts/agents/{agent.pk}/keys",
+        {"name": "laptop", "scopes": [], "expires_at": expires.isoformat()},
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 201
+    assert response.json()["expires_at"] is not None
+    assert ApiKey.objects.get(pk=response.json()["id"]).expires_at is not None
+
+
+@pytest.mark.django_db
+def test_issue_key_rejects_past_expiry(client: Client) -> None:
+    human = User.objects.create_user(username="alice", password=PASSWORD)
+    agent = User.create_agent(username="alice-bot", parent=human)
+    expires = timezone.now() - timedelta(days=1)
+    response = client.post(
+        f"/api/accounts/agents/{agent.pk}/keys",
+        {"name": "laptop", "scopes": [], "expires_at": expires.isoformat()},
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.django_db
+def test_issue_key_defaults_to_no_expiry(client: Client) -> None:
+    human = User.objects.create_user(username="alice", password=PASSWORD)
+    agent = User.create_agent(username="alice-bot", parent=human)
+    response = client.post(
+        f"/api/accounts/agents/{agent.pk}/keys",
+        {"name": "laptop", "scopes": []},
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 201
+    assert response.json()["expires_at"] is None
 
 
 # --- model invariants -----------------------------------------------------

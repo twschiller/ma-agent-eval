@@ -9,6 +9,10 @@ DEBUG = False
 # Cheap password hashing keeps the suite fast.
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
+# Axes is off by default in tests so unrelated auth cases can't lock each other
+# out; the lockout tests re-enable it with `@override_settings(AXES_ENABLED=True)`.
+AXES_ENABLED = False
+
 # Render `{% static %}` without a hashed manifest so template tests don't
 # require a `collectstatic` run. See ADR-0006.
 STORAGES = {

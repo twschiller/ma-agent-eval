@@ -18,12 +18,16 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 from maeval.common.models import new_ulid
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 # Permission scopes an API key may be granted. Kept deliberately small; new
 # write paths add their scope here and check it at the view.
@@ -106,6 +110,9 @@ class ApiKey(models.Model):
     scopes = models.JSONField(default=list)
     last_used_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
+    # When the key stops authenticating. Chosen by the issuing human; NULL means
+    # the key never expires. Enforced in `resolve` alongside revocation.
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering: ClassVar[list[str]] = ["-created_at"]
@@ -114,16 +121,32 @@ class ApiKey(models.Model):
         return f"{self.name} ({self.prefix}…)"
 
     @property
+    def is_expired(self) -> bool:
+        return self.expires_at is not None and self.expires_at <= timezone.now()
+
+    @property
     def is_active(self) -> bool:
-        return self.revoked_at is None
+        return self.revoked_at is None and not self.is_expired
 
     @staticmethod
     def _hash_secret(secret: str) -> str:
         return hashlib.sha256(secret.encode()).hexdigest()
 
     @classmethod
-    def issue(cls, *, agent: User, name: str, scopes: list[str]) -> tuple[ApiKey, str]:
-        """Mint a key for ``agent``; return the row and the one-time raw token."""
+    def issue(
+        cls,
+        *,
+        agent: User,
+        name: str,
+        scopes: list[str],
+        expires_at: datetime | None = None,
+    ) -> tuple[ApiKey, str]:
+        """Mint a key for ``agent``; return the row and the one-time raw token.
+
+        ``expires_at`` is optional — omit it for a non-expiring key. The raw
+        token carries the ``mae_`` namespace prefix so a leaked key is
+        recognizable (e.g. to secret scanners) as one of ours.
+        """
         prefix = secrets.token_hex(_PREFIX_BYTES)
         secret = secrets.token_hex(_SECRET_BYTES)
         key = cls.objects.create(
@@ -132,6 +155,7 @@ class ApiKey(models.Model):
             prefix=prefix,
             hashed_secret=cls._hash_secret(secret),
             scopes=scopes,
+            expires_at=expires_at,
         )
         raw = f"{_KEY_NAMESPACE}_{prefix}_{secret}"
         return key, raw
@@ -148,5 +172,7 @@ class ApiKey(models.Model):
         except cls.DoesNotExist:
             return None
         if not hmac.compare_digest(key.hashed_secret, cls._hash_secret(secret)):
+            return None
+        if key.is_expired:
             return None
         return key

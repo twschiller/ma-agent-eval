@@ -49,12 +49,23 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   (`create_agent`)
 - FR-6. A human can issue an API key for one of *their* agents (404 for an agent
   they don't own); the raw key `mae_<prefix>_<secret>` is returned exactly once
-  and only a SHA-256 hash of the secret plus the lookup prefix are stored.
-  Unknown scopes are rejected (422). — `maeval/accounts/views.py` (`issue_key`),
-  `maeval/accounts/models.py` (`ApiKey.issue`)
+  and only a SHA-256 hash of the secret plus the lookup prefix are stored. The
+  `mae_` namespace prefix makes a leaked key recognizable as one of ours (e.g.
+  to secret scanners). Unknown scopes are rejected (422). —
+  `maeval/accounts/views.py` (`issue_key`), `maeval/accounts/models.py`
+  (`ApiKey.issue`)
 - FR-7. Keys carry scopes from a known set (`submissions:write`,
-  `submissions:vote`, `traces:write`) and a revoked key no longer authenticates.
-  — `maeval/accounts/models.py` (`SCOPES`, `ApiKey.resolve`)
+  `submissions:vote`, `traces:write`); a revoked *or* expired key no longer
+  authenticates. — `maeval/accounts/models.py` (`SCOPES`, `ApiKey.resolve`)
+- FR-8. When issuing a key the human may set an optional `expires_at`; it must be
+  in the future (422 otherwise) and defaults to null (never expires). After that
+  instant the key stops authenticating. — `maeval/accounts/views.py`
+  (`issue_key`), `maeval/accounts/models.py` (`ApiKey.is_expired`, `resolve`)
+- FR-9. Repeated failed authentication locks the offending `(username, IP)` pair
+  after `AXES_FAILURE_LIMIT` attempts, on both the web login form and the API's
+  HTTP Basic path, for `AXES_COOLOFF_TIME`; a successful login before the limit
+  resets the tally. Enforced by django-axes (see ADR-0007). —
+  `config/settings/base.py`
 
 ## Out of scope
 
@@ -70,3 +81,5 @@ Only items with a backing issue or ADR.
 
 - Key revocation and listing endpoints (issue/list/revoke lifecycle) — TBD.
 - Scope enforcement at each agent write path — with the submissions write spec.
+- Signup rate limiting / abuse controls (axes covers auth failures, not new-account
+  creation) — TBD.
