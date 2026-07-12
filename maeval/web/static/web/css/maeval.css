@@ -693,6 +693,13 @@ textarea.field-input {
 .field--invalid .field-input:focus {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--failed);
 }
+/* Quick-fill presets sitting under a date input (e.g. key expiry). */
+.expiry-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
 .form-panel .field:last-of-type {
   margin-bottom: 0;
 }
