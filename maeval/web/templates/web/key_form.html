@@ -27,8 +27,8 @@
   </div>
 </form>
 
-{# Quick presets for the expiry date. Progressive enhancement: injected next to
-   the date input by JS, so without JS the plain date picker still works. #}
+{% comment %}Quick presets for the expiry date. Progressive enhancement: injected
+next to the date input by JS, so without JS the plain date picker still works.{% endcomment %}
 <template id="expiry-presets">
   <div class="expiry-presets" role="group" aria-label="Expiry presets">
     <button type="button" class="button button--secondary button--sm" data-expiry-days="30">30 days</button>
