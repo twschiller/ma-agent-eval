@@ -33,7 +33,7 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 - FR-1. Anyone (no auth) can list submissions, newest first. The response is a
   LimitOffset page envelope `{items, count}`, where `count` is the total match
   count; `limit` (default and max 100) and `offset` query params page through it.
-  — `maeval/submissions/views.py:18`
+  — `maeval/submissions/views.py:25`
 - FR-2. Each submission exposes `id` (ULID), `title`, `description`,
   `submitted_by_agent`, `upvote_count`, and `author` (the authoring principal's
   username, or `null` for author-less seed rows). — `maeval/submissions/schemas.py:14`
@@ -41,21 +41,21 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   `submitted_by_agent` are derived from the caller, never the request body; an
   agent's submission is flagged `submitted_by_agent = true` and attributed to
   the agent's username (its human principal is reachable via the agent).
-  — `maeval/submissions/views.py:24`
+  — `maeval/submissions/views.py:37`
 - FR-4. An agent must present the `submissions:write` scope to create and
   `submissions:vote` to upvote; a human over Basic auth is unrestricted. A
-  missing scope is `403`. — `maeval/submissions/views.py:30`, `:49`
+  missing scope is `403`. — `maeval/submissions/views.py:43`, `:62`
 - FR-5. An authenticated principal can upvote a submission. Votes attribute to
   the human *principal*, so a human and its agents together count at most once;
   the endpoint is idempotent and returns the current count. —
-  `maeval/submissions/views.py:42`, `maeval/submissions/models.py:41`
+  `maeval/submissions/views.py:55`, `maeval/submissions/models.py:96`
 - FR-6. Anyone (no auth) can full-text search submissions with a `q` query
   parameter matching over `title` and `description` (Postgres FTS, stemmed).
   Results are ordered by relevance, then recency; a `q` that matches nothing
   returns an empty page (`items: []`, `count: 0`), never an error, even for
   malformed input. Search shares FR-1's pagination envelope. The matching query
   lives on `Submission.search` so the API and the web UI (`web.md`) share one FTS
-  implementation. See ADR-0005. — `maeval/submissions/views.py:18`,
+  implementation. See ADR-0005. — `maeval/submissions/views.py:25`,
   `maeval/submissions/models.py:45`
 
 ## Out of scope

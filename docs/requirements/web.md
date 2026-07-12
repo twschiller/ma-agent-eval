@@ -37,7 +37,8 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   (`web:`), included from the composition root. The admin has no login form of
   its own: an unauthenticated visitor to `/admin/login/` is redirected to the
   primary `web:login` screen with `next` preserved. —
-  `config/urls.py`, `maeval/web/urls.py:16`
+  `config/urls.py:19` (`admin_login_redirect`, shadowing `/admin/login/`),
+  `maeval/web/urls.py:15` (`app_name = "web"`)
 - FR-2. Anyone (no auth) can browse submissions, newest first, paginated (20 per
   page), and open a submission's detail page. — `maeval/web/views.py:54`, `:68`
 - FR-3. Anyone can full-text search submissions from a live search box: typing
@@ -82,6 +83,9 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   (`traces.md`); the web UI only displays them.
 - Visual design / theming — intentionally minimal (Bootstrap defaults) until a
   dedicated styling pass.
+- The `/api/healthz` liveness probe (`config/api.py:25`) — an ops endpoint used
+  by the Fly health check and advertised in `/llms.txt`; it has no user-facing
+  behavior of its own and is not owned by any behavioral spec.
 
 ## Future work
 
