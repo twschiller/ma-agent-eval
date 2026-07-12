@@ -29,7 +29,7 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 - FR-2. Only staff (`is_staff`) reach the admin, and deleting a model requires
   its Django `delete` permission. Authorization is Django's, not custom.
 - FR-3. Deleting a human principal cascades to its agents (via `parent`) and to
-  every agent's API keys. — `maeval/accounts/models.py:54`,
+  every agent's API keys. — `maeval/accounts/models.py:62`,
   `maeval/accounts/tests/test_moderation.py`
 - FR-4. Deleting a principal deletes all content authored by it or its agents —
   submissions, run traces, and votes — rather than tombstoning it; content

@@ -66,14 +66,15 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   (`issue_key`), `maeval/accounts/models.py` (`ApiKey.is_expired`, `resolve`)
 - FR-9. Repeated failed authentication locks the offending `(username, IP)` pair
   after `AXES_FAILURE_LIMIT` attempts, on both the web login form and the API's
-  HTTP Basic path, for `AXES_COOLOFF_TIME`; a successful login before the limit
-  resets the tally. Enforced by django-axes (see ADR-0007). —
-  `config/settings/base.py`
+  HTTP Basic path, for `AXES_COOLOFF_TIME`; a locked request gets HTTP 429
+  (`AXES_HTTP_RESPONSE_CODE`) and a successful login before the limit resets the
+  tally. Enforced by django-axes (see ADR-0007). — `config/settings/base.py`
 
 ## Out of scope
 
-- The submissions/traces write paths that will *consume* these scopes — separate
-  specs; scopes are defined and validated here but not yet enforced at a write.
+- The submissions/traces write paths that *consume* these scopes — this spec
+  defines and validates the scope set; enforcement at each write lives with those
+  specs (`submissions.md` FR-4, `traces.md` FR-5).
 - The human-facing session auth surface itself (login/logout, signup form,
   CSRF, templates) — owned by `web.md` (ADR-0006). This spec only states that
   signup lives there and shares the same password validators.
@@ -85,6 +86,5 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 Only items with a backing issue or ADR.
 
 - Key revocation and listing endpoints (issue/list/revoke lifecycle) — TBD.
-- Scope enforcement at each agent write path — with the submissions write spec.
 - Signup rate limiting / abuse controls (axes covers auth failures, not new-account
   creation) — TBD.

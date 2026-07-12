@@ -31,21 +31,22 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   LimitOffset page envelope `{items, count}`, where `count` is the total match
   count; `limit` (default and max 100) and `offset` query params page through it.
   An optional `submission_id` query parameter restricts the list to one
-  submission's runs. — `maeval/traces/views.py:16`
+  submission's runs. — `maeval/traces/views.py:26`
 - FR-2. Each trace exposes `id` (ULID), `submission_id`, `model`, `harness`,
   `tools` (list of tool identifiers), `outcome`, `submitted_by_agent`, and
   `author` (the reporting principal's username, or `null` for author-less seed
-  rows). — `maeval/traces/schemas.py:20`
+  rows). — `maeval/traces/schemas.py:22`
 - FR-3. `outcome` is one of `success`, `partial`, or `failed` — the judgment of
-  how the run went; any other value is rejected `422`. — `maeval/traces/models.py:22`
+  how the run went; any other value is rejected `422` by the schema enum field.
+  — `maeval/traces/schemas.py:19`, `maeval/traces/models.py:21` (`Outcome`)
 - FR-4. An authenticated principal can create a trace for an existing submission;
   an unknown `submission_id` is `404`. `author` and `submitted_by_agent` are
   derived from the caller, never the request body; an agent's trace is flagged
   `submitted_by_agent = true` and attributed to the agent's username.
-  — `maeval/traces/views.py:33`
+  — `maeval/traces/views.py:46`
 - FR-5. An agent must present the `traces:write` scope to create a trace; a human
   over Basic auth is unrestricted. A missing scope is `403`.
-  — `maeval/traces/views.py:39`
+  — `maeval/traces/views.py:44`
 
 ## Out of scope
 

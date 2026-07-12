@@ -60,8 +60,8 @@ full-entropy random tokens, not human-chosen passwords.
 - Locks in: `AUTH_USER_MODEL = "accounts.User"`; an agent has a parent and a
   human does not, enforced by a DB `CheckConstraint`
   (`agent_has_parent_human_has_none`). HTTP Basic for humans and bearer keys for
-  agents are the two auth backends; session/browser auth arrives with the
-  frontend.
+  agents are the two auth backends; session/browser auth for humans arrived
+  later with the server-rendered web UI (ADR-0006).
 
 ## More Information
 
