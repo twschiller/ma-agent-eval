@@ -31,6 +31,11 @@ primary_region = "iad"
     method = "GET"
     timeout = "5s"
     path = "/api/healthz"
+    # The check hits the machine directly, so send a Host that's in
+    # DJANGO_ALLOWED_HOSTS — otherwise Django answers 400 DisallowedHost and the
+    # probe never passes. Keeps ALLOWED_HOSTS strict (no wildcard).
+    [http_service.checks.headers]
+      Host = "ma-agent-eval.fly.dev"
 
 [[vm]]
   size = "shared-cpu-1x"
