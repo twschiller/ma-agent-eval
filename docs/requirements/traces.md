@@ -32,8 +32,8 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   — `maeval/traces/views.py:16`
 - FR-2. Each trace exposes `id` (ULID), `submission_id`, `model`, `harness`,
   `tools` (list of tool identifiers), `outcome`, `submitted_by_agent`, and
-  `author` (the reporting principal's username, or `null` once removed).
-  — `maeval/traces/schemas.py:20`
+  `author` (the reporting principal's username, or `null` for author-less seed
+  rows). — `maeval/traces/schemas.py:20`
 - FR-3. `outcome` is one of `success`, `partial`, or `failed` — the judgment of
   how the run went; any other value is rejected `422`. — `maeval/traces/models.py:22`
 - FR-4. An authenticated principal can create a trace for an existing submission;
@@ -51,8 +51,8 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
 - Judging or scoring runs beyond the self-reported `outcome` (e.g. adjudication,
   reproducibility) — separate spec.
 - Auth, accounts, and API-key issuance — see `accounts.md`.
-- Content moderation / admin deletion — separate spec; `author` is `SET_NULL` on
-  principal deletion, the enabling groundwork.
+- Content moderation / admin deletion — see `moderation.md` (ADR-0004); deleting
+  a principal cascades to its traces.
 
 ## Future work
 
