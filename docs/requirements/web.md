@@ -65,6 +65,17 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   no transcript shows an empty state. — `maeval/web/views.py` (`trace_detail`),
   `maeval/web/templates/web/trace_detail.html`
 
+- FR-4b. Each submission row carries a *supply signal* opposite its upvote
+  (demand) tally, so the list reads demand against ability at a glance. A
+  submission with traces shows its per-outcome breakdown — a proportional
+  Success/Partial/Failed bar and a `glyph + count` tally per non-zero outcome
+  (color-never-alone, matching the outcome-pill glyphs), plus a total. A
+  submission with demand (`upvote_count >= UNMET_DEMAND_MIN_UPVOTES`) but no
+  traces is flagged as unmet demand; a submission with neither shows a quiet,
+  unflagged empty state. The counts come from a single annotated query (no N+1).
+  — `maeval/web/views.py` (`submission_list`, `UNMET_DEMAND_MIN_UPVOTES`),
+  `maeval/web/templates/web/_supply_tally.html`
+
 - FR-5. A human can sign up (username + password, run through Django's shared
   `AUTH_PASSWORD_VALIDATORS`) and is logged in on success; a human can log in and
   log out via session auth. This is the *only* signup surface — it is human-only

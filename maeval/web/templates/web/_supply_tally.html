@@ -1,0 +1,52 @@
+{% comment %}
+Supply signal for one `submission` in the list — the demand↔ability readout that
+sits opposite the demand tally, so a reader scans one right-hand column and sees
+supply against demand per row. Three states:
+  • traces recorded → a proportional outcome bar + a per-outcome tally (glyph+count)
+  • no traces but demand at/above `unmet_demand_threshold` (view context) → an amber
+    "gap" flag, the one editorialized state: interest no agent has attempted
+  • no traces and no demand → a quiet, unflagged "No traces yet"
+
+Every outcome carries a distinct glyph shape *and* a number — the color-never-alone
+rule (DESIGN.md / AAA): the breakdown reads in grayscale and to a screen reader.
+The bar is an SVG whose viewBox width is the trace total, so integer counts map to
+exact segment widths with no inline styles (CSP forbids them, ADR-0010).
+{% endcomment %}
+{% if submission.trace_count %}
+  <span class="supply supply--traces">
+    <svg class="trace-bar" viewBox="0 0 {{ submission.trace_count }} 1" preserveAspectRatio="none"
+         aria-hidden="true" focusable="false">
+      {% if submission.trace_success %}<rect class="trace-bar__seg trace-bar__seg--success" x="0" y="0" width="{{ submission.trace_success }}" height="1"/>{% endif %}
+      {% if submission.trace_partial %}<rect class="trace-bar__seg trace-bar__seg--partial" x="{{ submission.trace_success }}" y="0" width="{{ submission.trace_partial }}" height="1"/>{% endif %}
+      {% if submission.trace_failed %}<rect class="trace-bar__seg trace-bar__seg--failed" x="{{ submission.trace_success|add:submission.trace_partial }}" y="0" width="{{ submission.trace_failed }}" height="1"/>{% endif %}
+    </svg>
+    <span class="supply__tally">
+      {% if submission.trace_success %}
+        <span class="tally tally--success" aria-label="{{ submission.trace_success }} successful">
+          <svg class="tally__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span aria-hidden="true">{{ submission.trace_success }}</span>
+        </span>
+      {% endif %}
+      {% if submission.trace_partial %}
+        <span class="tally tally--partial" aria-label="{{ submission.trace_partial }} partial">
+          <svg class="tally__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.3" stroke="currentColor" stroke-width="1.4"/><path d="M8 2.7a5.3 5.3 0 0 1 0 10.6z" fill="currentColor"/></svg><span aria-hidden="true">{{ submission.trace_partial }}</span>
+        </span>
+      {% endif %}
+      {% if submission.trace_failed %}
+        <span class="tally tally--failed" aria-label="{{ submission.trace_failed }} failed">
+          <svg class="tally__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="M4.6 4.6l6.8 6.8M11.4 4.6l-6.8 6.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span aria-hidden="true">{{ submission.trace_failed }}</span>
+        </span>
+      {% endif %}
+    </span>
+    <span class="supply__total">{{ submission.trace_count }} trace{{ submission.trace_count|pluralize }}</span>
+  </span>
+{% elif submission.upvote_count >= unmet_demand_threshold %}
+  <span class="supply supply--gap">
+    <svg class="supply__glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+      <path d="M8 2.3l6.2 11.4H1.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M8 6.3v3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="8" cy="11.6" r="0.55" fill="currentColor"/>
+    </svg>No traces yet
+  </span>
+{% else %}
+  <span class="supply supply--empty">No traces yet</span>
+{% endif %}

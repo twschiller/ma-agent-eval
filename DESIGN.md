@@ -330,6 +330,8 @@ never of decoration. Cards get a border, not a drop shadow.
 - **Border:** 1px #dbdee2, all four sides. Flat — no shadow.
 - **Padding:** 16px.
 - **List rows** (submissions, traces): full-width rows separated by 1px borders, title in Title weight, meta in Slate Muted, the demand/outcome signal right-aligned. Hover fills the row with paper (#f5f7fa).
+- **Supply signal** (submission rows): under the demand tally in the right rail, a read-only demand↔ability readout. When traces exist: a **trace bar** — a `104×6px` pill-radius SVG split into Success/Partial/Failed segments proportional to the outcome counts (segment widths are exact integer counts, no inline styles — CSP forbids them) — above a **tally** of per-outcome `glyph + count` chips (only non-zero outcomes shown) and a muted `N traces` total. Each chip pairs the outcome's semantic color with its distinct glyph (check / half-circle / cross) *and* the number, so the split reads in grayscale and to a screen reader (color-never-alone). The tally, not the bar, is the accessible signal — the bar is `aria-hidden`.
+- **Unmet-demand flag:** a submission with demand but zero traces shows a single Partial-Amber `⚠ No traces yet` — the *only* editorialized row state, marking the demand-without-ability gap. A row with no demand and no traces shows a quiet Slate-Muted `No traces yet`, unflagged. Amber (a warning) not Failed Red (nothing failed — nothing was attempted).
 
 ### Inputs / Fields
 

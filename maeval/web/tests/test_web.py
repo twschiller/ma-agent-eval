@@ -5,7 +5,10 @@ session-auth write paths. The API surface has its own tests; here we assert the
 HTML layer and that attribution/vote semantics match via the shared helpers.
 """
 
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 import pytest
@@ -16,6 +19,9 @@ from django.utils import timezone
 from maeval.accounts.models import ApiKey, User
 from maeval.submissions.models import Submission, Vote
 from maeval.traces.models import RunTrace
+
+if TYPE_CHECKING:
+    from pytest_django.fixtures import DjangoAssertNumQueries
 
 PASSWORD = "corr3ct-horse-b4ttery"
 
@@ -106,6 +112,71 @@ def test_detail_shows_submission_and_traces(client: Client) -> None:
     assert response.status_code == 200
     assert b"claude-opus-4-8" in response.content
     assert b"Successful" in response.content
+
+
+def _trace(submission: Submission, outcome: str) -> RunTrace:
+    return RunTrace.objects.create(
+        submission=submission, model="claude-opus-4-8", harness="claude-code", outcome=outcome
+    )
+
+
+@pytest.mark.django_db
+def test_list_shows_supply_tally_for_traced_submission(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    for outcome in (RunTrace.Outcome.SUCCESS, RunTrace.Outcome.SUCCESS, RunTrace.Outcome.FAILED):
+        _trace(submission, outcome)
+    body = client.get(list_url(), headers=HTMX).content.decode()
+    # The per-outcome breakdown and total, and the proportional bar's segments.
+    assert 'aria-label="2 successful"' in body
+    assert 'aria-label="1 failed"' in body
+    assert "3 traces" in body
+    assert "trace-bar__seg--success" in body
+    assert "trace-bar__seg--failed" in body
+    # No partial traces → no partial segment or chip (zeros are omitted, not shown).
+    assert "trace-bar__seg--partial" not in body
+    assert "partial" not in body
+
+
+@pytest.mark.django_db
+def test_list_flags_unmet_demand(client: Client) -> None:
+    # Demand exists, but no agent has attempted it — the one editorialized state.
+    Submission.objects.create(title="Get a food truck permit", upvote_count=3)
+    body = client.get(list_url(), headers=HTMX).content.decode()
+    assert "supply--gap" in body
+    assert "No traces yet" in body
+
+
+@pytest.mark.django_db
+def test_list_does_not_flag_when_no_demand(client: Client) -> None:
+    # No demand and no traces → quiet empty state, never the amber gap flag.
+    Submission.objects.create(title="Obscure task nobody wants", upvote_count=0)
+    body = client.get(list_url(), headers=HTMX).content.decode()
+    assert "supply--empty" in body
+    assert "supply--gap" not in body
+
+
+@pytest.mark.django_db
+def test_list_does_not_flag_traced_submission(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card", upvote_count=5)
+    _trace(submission, RunTrace.Outcome.SUCCESS)
+    body = client.get(list_url(), headers=HTMX).content.decode()
+    # Demand met by a trace — no gap flag, and the tally shows instead.
+    assert "supply--gap" not in body
+    assert 'aria-label="1 successful"' in body
+
+
+@pytest.mark.django_db
+def test_list_supply_counts_do_not_n_plus_one(
+    client: Client, django_assert_max_num_queries: DjangoAssertNumQueries
+) -> None:
+    # Trace tallies come from one annotated aggregate query, so query count must
+    # not scale with the number of rows or their traces (web.md FR-4b).
+    for i in range(5):
+        submission = Submission.objects.create(title=f"Task {i}", upvote_count=i)
+        for outcome in (RunTrace.Outcome.SUCCESS, RunTrace.Outcome.PARTIAL):
+            _trace(submission, outcome)
+    with django_assert_max_num_queries(6):
+        client.get(list_url(), headers=HTMX)
 
 
 @pytest.mark.django_db

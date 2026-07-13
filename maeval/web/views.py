@@ -40,6 +40,12 @@ if TYPE_CHECKING:
 # Keep pages small; the catalog is human-scale (see ADR-0005).
 PAGE_SIZE = 20
 
+# A submission with at least this many upvotes but no run traces is flagged as
+# *unmet demand* on the list — the demand↔ability gap the supply signal exists to
+# surface (web.md FR-4b). Set to 1 so any public interest counts; tune upward if
+# the flag gets noisy as the catalog grows.
+UNMET_DEMAND_MIN_UPVOTES = 1
+
 
 def _has_voted(request: HtmxHttpRequest, submission: Submission) -> bool:
     """Whether the logged-in principal has already upvoted ``submission``."""
@@ -62,9 +68,24 @@ def submission_list(request: HtmxHttpRequest) -> HttpResponse:
     results fragment; a normal request gets the full page.
     """
     q = request.GET.get("q", "").strip()
-    submissions = Submission.search(q).select_related("author")
+    submissions = (
+        Submission.search(q)
+        .select_related("author")
+        # Per-outcome trace tallies for the supply signal (web.md FR-4b). All four
+        # are conditional aggregates over the one `traces` join, so this stays a
+        # single query per page — no N+1 across the row's trace counts.
+        .annotate(
+            trace_count=Count("traces"),
+            trace_success=Count("traces", filter=Q(traces__outcome=RunTrace.Outcome.SUCCESS)),
+            trace_partial=Count("traces", filter=Q(traces__outcome=RunTrace.Outcome.PARTIAL)),
+            trace_failed=Count("traces", filter=Q(traces__outcome=RunTrace.Outcome.FAILED)),
+        )
+    )
     page = Paginator(submissions, PAGE_SIZE).get_page(request.GET.get("page"))
-    context = {"page_obj": page, "q": q}
+    # The template flags a no-trace row as unmet demand at this threshold — the one
+    # editorialized state (web.md FR-4b). Passed in rather than hard-coded in the
+    # template so the rule lives next to the annotations that feed it.
+    context = {"page_obj": page, "q": q, "unmet_demand_threshold": UNMET_DEMAND_MIN_UPVOTES}
     template = "web/_submission_list.html" if request.htmx else "web/submission_list.html"
     return render(request, template, context)
 
