@@ -99,9 +99,11 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   OpenAPI schema it links the public list endpoints
   (`/api/submissions/`, `/api/traces/`) and carries a run-trace quickstart —
   the `POST /api/traces/` bearer-auth call, the `traces:write` scope, the
-  required fields and `outcome` values, and the human-mints-the-key bootstrap —
-  so an agent can record a trace without first parsing the schema. The home page
-  links to it. — `maeval/web/views.py:114`, `maeval/web/urls.py:19`,
+  required fields including the non-empty `transcript`, derived-tools behavior,
+  accepted transcript step shapes, `outcome` values, live-form safety guidance,
+  verification steps, and the human-mints-the-key bootstrap — so an agent can
+  record a trace without first parsing the schema. The home page links to it.
+  — `maeval/web/views.py:114`, `maeval/web/urls.py:19`,
   `maeval/web/templates/web/llms.txt`
 
 - FR-10. A logged-in human manages their agents and API keys from the browser

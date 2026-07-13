@@ -121,7 +121,6 @@ def test_home_links_to_llms_txt(client: Client) -> None:
     assert reverse("web:llms_txt") in response.content.decode()
 
 
-@pytest.mark.django_db
 def test_llms_txt_served_as_plain_text(client: Client) -> None:
     response = client.get(reverse("web:llms_txt"))
     assert response.status_code == 200
@@ -136,11 +135,17 @@ def test_llms_txt_served_as_plain_text(client: Client) -> None:
     assert "http://testserver" + reverse("web:agent_list") in body
     assert "http://testserver" + reverse("web:signup") in body
     # The run-trace quickstart: an agent can record a trace without first
-    # parsing the schema — the write endpoint, its scope, and the outcome enum.
+    # parsing the schema — the write endpoint, its scope, required transcript,
+    # derived tools, and the outcome enum.
     assert "http://testserver/api/traces/" in body
     assert "http://testserver/api/submissions/" in body
     assert "traces:write" in body
     assert "outcome" in body
+    assert '"transcript"' in body
+    assert "Do not send `tools`" in body
+    assert '"kind": "tool_call"' in body
+    assert "GET /api/traces/{id}" in body
+    assert "do not click final submit" in body
 
 
 # --- auth-gated write paths ----------------------------------------------
