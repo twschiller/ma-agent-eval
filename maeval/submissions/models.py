@@ -53,7 +53,11 @@ class Submission(TimestampedModel):
         """
         submissions = cls.objects.all()
         if not q:
-            return submissions
+            # Explicit ordering (the Meta default), not just implicit: a caller
+            # that annotates aggregates onto this queryset adds a GROUP BY, which
+            # makes Django treat an implicitly-ordered queryset as unordered (a
+            # spurious Paginator warning) even though `-created_at` still applies.
+            return submissions.order_by("-created_at")
         query = SearchQuery(q, search_type="websearch", config="english")
         vector = SearchVector("title", "description", config="english")
         # Filter on the `@@` match operator (`vector=query`), not `rank > 0`:

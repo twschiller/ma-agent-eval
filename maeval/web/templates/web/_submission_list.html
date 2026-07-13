@@ -17,12 +17,13 @@ Rendered standalone on an htmx request, or included by submission_list.html.
           {% endif %}
           <div class="list-row__meta">by {{ submission.author.username|default:"anonymous" }}</div>
         </div>
-        <div class="list-row__demand">
+        <div class="list-row__aside">
           <span class="demand">
             <svg class="demand__glyph" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 1.5l5 8H1z" fill="currentColor"/></svg>
             <span class="demand__count">{{ submission.upvote_count }}</span>
             <span class="demand__label">upvote{{ submission.upvote_count|pluralize }}</span>
           </span>
+          {% include "web/_supply_tally.html" %}
         </div>
       </a>
     {% endfor %}
