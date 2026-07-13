@@ -916,7 +916,9 @@ textarea.field-input {
   color: var(--ink);
 }
 
-/* Reasoning is collapsed by default — present, but out of the reader's way. */
+/* Reasoning is collapsed by default — present, but out of the reader's way.
+ * The summary reads as an interactive control: a bordered chip with a ▸/▾
+ * marker and a trailing Show/Hide verb, so the disclosure is unmistakable. */
 .trace-reasoning {
   margin: 0;
 }
@@ -926,10 +928,27 @@ textarea.field-input {
   gap: var(--space-xs);
   cursor: pointer;
   list-style: none;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--ink-muted);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.trace-reasoning__summary:hover {
+  background: var(--sunken);
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+.trace-reasoning__summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 .trace-reasoning__summary::-webkit-details-marker {
   display: none;
@@ -940,6 +959,15 @@ textarea.field-input {
 }
 .trace-reasoning[open] .trace-reasoning__summary::before {
   content: "▾";
+}
+/* Trailing verb spells out the action the marker only hints at. */
+.trace-reasoning__summary::after {
+  content: "Show";
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+.trace-reasoning[open] .trace-reasoning__summary::after {
+  content: "Hide";
 }
 .trace-reasoning[open] .trace-reasoning__summary {
   margin-bottom: var(--space-sm);
