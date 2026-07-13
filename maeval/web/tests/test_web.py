@@ -19,6 +19,7 @@ from django.utils import timezone
 from maeval.accounts.models import ApiKey, User
 from maeval.submissions.models import Submission, Vote
 from maeval.traces.models import RunTrace
+from maeval.web.markdown import render_markdown
 
 if TYPE_CHECKING:
     from pytest_django.fixtures import DjangoAssertNumQueries
@@ -616,6 +617,78 @@ def test_trace_detail_flags_error_tool_result(client: Client) -> None:
     )
     body = client.get(reverse("web:trace_detail", args=[trace.pk])).content.decode()
     assert "trace-code--error" in body
+
+
+# --- Transcript Markdown rendering + sanitization (ADR-0012) ------------------
+
+
+def test_render_markdown_renders_common_constructs() -> None:
+    html = render_markdown("**bold** and `code`\n\n- one\n- two")
+    assert "<strong>bold</strong>" in html
+    assert "<code>code</code>" in html
+    assert "<li>one</li>" in html
+
+
+def test_render_markdown_renders_fenced_code_and_tables() -> None:
+    html = render_markdown("```\nx = 1\n```\n\n| a | b |\n| - | - |\n| 1 | 2 |")
+    assert "<pre>" in html
+    assert "<table>" in html
+
+
+def test_render_markdown_strips_script_and_event_handlers() -> None:
+    html = render_markdown('<script>alert(1)</script><p onclick="steal()">hi</p>')
+    assert "<script" not in html
+    assert "alert(1)" not in html  # script *content* is dropped, not just the tag
+    assert "onclick" not in html
+
+
+def test_render_markdown_strips_unsafe_link_schemes() -> None:
+    html = render_markdown("[x](javascript:alert(1))")
+    assert "javascript:" not in html
+
+
+def test_render_markdown_hardens_links() -> None:
+    html = render_markdown("[MA](https://mass.gov)")
+    assert 'href="https://mass.gov"' in html
+    assert 'rel="nofollow noopener noreferrer"' in html
+
+
+def test_render_markdown_drops_images() -> None:
+    # Images are outside the allowlist: external fetch/tracking vector, and CSP
+    # img-src would block them anyway.
+    html = render_markdown("![x](https://evil.example/pixel.gif)")
+    assert "<img" not in html
+
+
+@pytest.mark.django_db
+def test_trace_detail_renders_transcript_markdown(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="m",
+        harness="h",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=[{"kind": "assistant", "content": "Here is a **plan**:\n\n1. step one"}],
+    )
+    body = client.get(reverse("web:trace_detail", args=[trace.pk])).content.decode()
+    assert "<strong>plan</strong>" in body
+    assert "<li>step one</li>" in body
+
+
+@pytest.mark.django_db
+def test_trace_detail_sanitizes_transcript_markdown(client: Client) -> None:
+    """A malicious transcript can't inject markup — the render is allowlist-
+    sanitized before it reaches the page (ADR-0012), backstopped by the CSP."""
+    submission = Submission.objects.create(title="Book a park")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="m",
+        harness="h",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=[{"kind": "user", "content": "<script>alert(1)</script>hi"}],
+    )
+    body = client.get(reverse("web:trace_detail", args=[trace.pk])).content.decode()
+    assert "<script>alert(1)</script>" not in body
 
 
 @pytest.mark.django_db

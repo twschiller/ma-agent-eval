@@ -17,3 +17,4 @@ cite as `ADR-0007`. Use `adr-template.md` for new records.
 | [0009](0009-browser-agent-key-management.md)  | Manage agents and API keys from the human web UI      | accepted |
 | [0010](0010-content-security-policy.md)       | Enforce a strict same-origin CSP (Django built-in)    | accepted |
 | [0011](0011-run-trace-transcripts.md)         | Store run-trace transcripts as a normalized step list | accepted |
+| [0012](0012-render-transcript-markdown.md)    | Render transcript prose as sanitized Markdown         | accepted |

@@ -62,14 +62,14 @@
         <li class="trace-step trace-step--{{ step.kind }}">
           {% if step.kind == "user" %}
             <p class="trace-step__role">User</p>
-            <div class="trace-step__body prose">{{ step.content|linebreaksbr }}</div>
+            <div class="trace-step__body prose">{{ step.content|markdown }}</div>
           {% elif step.kind == "assistant" %}
             <p class="trace-step__role">Assistant</p>
-            <div class="trace-step__body prose">{{ step.content|linebreaksbr }}</div>
+            <div class="trace-step__body prose">{{ step.content|markdown }}</div>
           {% elif step.kind == "reasoning" %}
             <details class="trace-reasoning">
               <summary class="trace-reasoning__summary">Reasoning</summary>
-              <div class="trace-step__body prose muted">{{ step.content|linebreaksbr }}</div>
+              <div class="trace-step__body prose muted">{{ step.content|markdown }}</div>
             </details>
           {% elif step.kind == "tool_call" %}
             <p class="trace-step__role">Tool call <span class="mono trace-step__tool">{{ step.name }}</span></p>
