@@ -832,6 +832,140 @@ textarea.field-input {
   padding: 1px 6px;
   white-space: nowrap;
 }
+/* Trailing "View trace" action cell in the traces tables. */
+.data-table__action {
+  white-space: nowrap;
+}
+.data-table__action a {
+  font-weight: 600;
+}
+
+/* ---- Trace detail (metadata + transcript, ADR-0011) ---------------------- */
+
+.trace-head {
+  margin-bottom: var(--space-xl);
+}
+.trace-head__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+/* Metadata as a compact key/value grid — keys in the Label register. */
+.trace-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0;
+}
+.trace-meta dt {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-muted);
+}
+.trace-meta dd {
+  margin: 0;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* The transcript: an ordered list of steps in one flat, border-defined
+ * container (the list-row register — depth from rule and tone, not shadow). */
+.transcript {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+.trace-step {
+  padding: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
+.trace-step:first-child {
+  border-top: none;
+}
+/* User turns sit on a faint sunken tint so the exchange alternates visibly;
+ * the role label is the primary signal and the tint only secondary. */
+.trace-step--user {
+  background: var(--sunken);
+}
+.trace-step__role {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-muted);
+}
+.trace-step__tool {
+  color: var(--ink);
+  font-weight: 400;
+}
+.trace-step__flag {
+  color: var(--failed); /* the word "error" carries the meaning; color confirms */
+  font-weight: 600;
+}
+.trace-step__body {
+  margin: 0;
+  color: var(--ink);
+}
+
+/* Reasoning is collapsed by default — present, but out of the reader's way. */
+.trace-reasoning {
+  margin: 0;
+}
+.trace-reasoning__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink-muted);
+}
+.trace-reasoning__summary::-webkit-details-marker {
+  display: none;
+}
+.trace-reasoning__summary::before {
+  content: "▸";
+  font-size: 0.7em;
+}
+.trace-reasoning[open] .trace-reasoning__summary::before {
+  content: "▾";
+}
+.trace-reasoning[open] .trace-reasoning__summary {
+  margin-bottom: var(--space-sm);
+}
+
+/* Tool calls/results are machine data: mono in a sunken inset (the code-block
+ * register), scrollable, wrapping long lines rather than blowing out width. */
+.trace-code {
+  margin: 0;
+  padding: var(--space-md);
+  max-height: 22rem;
+  overflow: auto;
+  background: var(--sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.trace-code--error {
+  background: var(--failed-fill);
+  border-color: var(--failed);
+}
 
 /* ---- Breadcrumb ---------------------------------------------------------- */
 

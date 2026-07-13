@@ -45,13 +45,36 @@ class RunTrace(TimestampedModel):
 
     # What was run. Free-form strings: the space of models/harnesses is open and
     # evolves faster than any enum we'd maintain (e.g. "claude-opus-4-8",
-    # "claude-code"). `tools` is the list of tool identifiers the run had access
-    # to (e.g. MCP servers, function names).
+    # "claude-code").
     model = models.CharField(max_length=200)
     harness = models.CharField(max_length=200)
+    # The distinct tool identifiers the run *used*. Derived at creation from the
+    # transcript's `tool_call` steps (ADR-0011), never client-asserted — so it
+    # can't disagree with the evidence. Stored (not computed on read) so the
+    # lean list view has it without loading the transcript.
     tools = models.JSONField(default=list, blank=True)
 
     outcome = models.CharField(max_length=16, choices=Outcome.choices)
+
+    # Optional normalized transcript of the run: an ordered list of steps
+    # (`user` / `assistant` / `reasoning` / `tool_call` / `tool_result`),
+    # submitted already-normalized by the client and stored verbatim (ADR-0011).
+    # Empty for summary-only traces. The shape is validated on ingest by the API
+    # (`schemas.TranscriptStep`), not by the DB. Public — a future ingest-time
+    # scan will reject secrets/PII before a trace is accepted (`traces.md`).
+    transcript = models.JSONField(default=list, blank=True)
+
+    @staticmethod
+    def tools_used(transcript: list[dict]) -> list[str]:
+        """The distinct tool names invoked in a transcript, sorted. `tools` is
+        derived from this at creation rather than client-asserted (ADR-0011)."""
+        return sorted(
+            {
+                step["name"]
+                for step in transcript
+                if step.get("kind") == "tool_call" and step.get("name")
+            }
+        )
 
     def __str__(self) -> str:
         return f"{self.model} ({self.outcome})"

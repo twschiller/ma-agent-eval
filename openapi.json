@@ -95,6 +95,26 @@
         "title": "ApiKeyIn",
         "type": "object"
       },
+      "AssistantStep": {
+        "description": "The agent's visible message text.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "kind": {
+            "const": "assistant",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "content"
+        ],
+        "title": "AssistantStep",
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -178,6 +198,26 @@
         "title": "PagedTraceOut",
         "type": "object"
       },
+      "ReasoningStep": {
+        "description": "The agent's private reasoning / thinking, when the harness exposes it.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "kind": {
+            "const": "reasoning",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "content"
+        ],
+        "title": "ReasoningStep",
+        "type": "object"
+      },
       "SubmissionIn": {
         "description": "Create payload. `submitted_by_agent`/`author` are derived from the\nauthenticated caller, never accepted from the body.",
         "properties": {
@@ -242,8 +282,170 @@
         "title": "SubmissionOut",
         "type": "object"
       },
+      "ToolCallStep": {
+        "description": "A tool invocation: the tool name and its JSON input. `id` optionally\npairs the call to its `tool_result` (a harness may instead just emit them\nadjacently).",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "input": {
+            "additionalProperties": true,
+            "title": "Input",
+            "type": "object"
+          },
+          "kind": {
+            "const": "tool_call",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "ToolCallStep",
+        "type": "object"
+      },
+      "ToolResultStep": {
+        "description": "The output of a tool call, flattened to a string, with an error flag.\n`tool_call_id` optionally pairs it back to its `tool_call`.",
+        "properties": {
+          "is_error": {
+            "default": false,
+            "title": "Is Error",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "tool_result",
+            "title": "Kind",
+            "type": "string"
+          },
+          "output": {
+            "title": "Output",
+            "type": "string"
+          },
+          "tool_call_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Call Id"
+          }
+        },
+        "required": [
+          "kind",
+          "output"
+        ],
+        "title": "ToolResultStep",
+        "type": "object"
+      },
+      "TraceDetailOut": {
+        "description": "One trace *with* its transcript. The list endpoint returns the lean\n`TraceOut` (transcripts can be large); the detail endpoint returns this.",
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "harness": {
+            "title": "Harness",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "submission_id": {
+            "title": "Submission Id",
+            "type": "string"
+          },
+          "submitted_by_agent": {
+            "title": "Submitted By Agent",
+            "type": "boolean"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "transcript": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "assistant": "#/components/schemas/AssistantStep",
+                  "reasoning": "#/components/schemas/ReasoningStep",
+                  "tool_call": "#/components/schemas/ToolCallStep",
+                  "tool_result": "#/components/schemas/ToolResultStep",
+                  "user": "#/components/schemas/UserStep"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/UserStep"
+                },
+                {
+                  "$ref": "#/components/schemas/AssistantStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ReasoningStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolCallStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolResultStep"
+                }
+              ]
+            },
+            "title": "Transcript",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "submission_id",
+          "model",
+          "harness",
+          "tools",
+          "outcome",
+          "submitted_by_agent"
+        ],
+        "title": "TraceDetailOut",
+        "type": "object"
+      },
       "TraceIn": {
-        "description": "Create payload. `submitted_by_agent`/`author` are derived from the\nauthenticated caller, never accepted from the body; `submission_id`\nidentifies the task the run attempted.",
+        "description": "Create payload. `submitted_by_agent`/`author` are derived from the\nauthenticated caller, never accepted from the body; `submission_id`\nidentifies the task the run attempted. `transcript` is **required and\nnon-empty**: a trace is the evidence behind an outcome, so a run reported\nwithout its steps is rejected `422` (ADR-0011).",
         "properties": {
           "harness": {
             "maxLength": 200,
@@ -262,11 +464,39 @@
             "title": "Submission Id",
             "type": "string"
           },
-          "tools": {
+          "transcript": {
             "items": {
-              "type": "string"
+              "discriminator": {
+                "mapping": {
+                  "assistant": "#/components/schemas/AssistantStep",
+                  "reasoning": "#/components/schemas/ReasoningStep",
+                  "tool_call": "#/components/schemas/ToolCallStep",
+                  "tool_result": "#/components/schemas/ToolResultStep",
+                  "user": "#/components/schemas/UserStep"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/UserStep"
+                },
+                {
+                  "$ref": "#/components/schemas/AssistantStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ReasoningStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolCallStep"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolResultStep"
+                }
+              ]
             },
-            "title": "Tools",
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Transcript",
             "type": "array"
           }
         },
@@ -274,7 +504,8 @@
           "submission_id",
           "model",
           "harness",
-          "outcome"
+          "outcome",
+          "transcript"
         ],
         "title": "TraceIn",
         "type": "object"
@@ -372,6 +603,26 @@
           "is_agent"
         ],
         "title": "UserOut",
+        "type": "object"
+      },
+      "UserStep": {
+        "description": "A prompt/input turn from the human or environment driving the run.",
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "kind": {
+            "const": "user",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "content"
+        ],
+        "title": "UserStep",
         "type": "object"
       }
     },
@@ -773,6 +1024,39 @@
           }
         ],
         "summary": "Create Trace",
+        "tags": [
+          "traces"
+        ]
+      }
+    },
+    "/api/traces/{trace_id}": {
+      "get": {
+        "description": "Public, unauthenticated fetch of one trace *with* its transcript.\n\nThe list endpoint stays lean (`TraceOut`); the transcript \u2014 which can be\nlarge \u2014 is served only here, per-id.",
+        "operationId": "maeval_traces_views_get_trace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trace_id",
+            "required": true,
+            "schema": {
+              "title": "Trace Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceDetailOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get Trace",
         "tags": [
           "traces"
         ]

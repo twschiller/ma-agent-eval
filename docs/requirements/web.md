@@ -21,6 +21,9 @@ design is deliberately minimal for now.
   to do.
 - As an unauthenticated visitor, I want to open a submission and see the run
   traces recorded against it, so that I can gauge what agents can actually do.
+- As an unauthenticated visitor, I want to open a single trace and read its
+  transcript — messages, reasoning, and tool calls — so that I can see how the
+  run actually went, not just its outcome.
 - As a human, I want to sign up and log in from the browser, so that I can
   contribute without an API key.
 - As a logged-in human, I want to submit a task and upvote submissions, so that
@@ -53,6 +56,14 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   with its self-reported outcome (success / partial / failed), model, harness,
   tools, and reporting principal. A standalone traces page lists all traces,
   newest first, paginated. — `maeval/web/views.py:68`, `:106`
+
+- FR-4a. Each listed trace (on both the submission detail and the standalone
+  traces page) links to its own detail page — a public page showing the trace's
+  metadata and its recorded transcript rendered as an ordered list of steps
+  (user / assistant / reasoning / tool call / tool result), with reasoning
+  collapsed and tool calls/results as mono code blocks (ADR-0011). A trace with
+  no transcript shows an empty state. — `maeval/web/views.py` (`trace_detail`),
+  `maeval/web/templates/web/trace_detail.html`
 
 - FR-5. A human can sign up (username + password, run through Django's shared
   `AUTH_PASSWORD_VALIDATORS`) and is logged in on success; a human can log in and
