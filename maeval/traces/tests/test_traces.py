@@ -8,8 +8,18 @@ from django.test import Client
 from maeval.accounts.models import SCOPE_TRACES_WRITE, ApiKey, User
 from maeval.submissions.models import Submission
 from maeval.traces.models import RunTrace
+from maeval.traces.schemas import MAX_TRANSCRIPT_STEPS
 
 PASSWORD = "corr3ct-horse-b4ttery"
+
+# A normalized transcript covering all five step kinds (ADR-0011).
+TRANSCRIPT = [
+    {"kind": "user", "content": "Renew my library card"},
+    {"kind": "reasoning", "content": "I'll check the catalog API first."},
+    {"kind": "assistant", "content": "Looking up your account."},
+    {"kind": "tool_call", "name": "library-mcp.lookup", "input": {"card": "123"}, "id": "c1"},
+    {"kind": "tool_result", "output": "Account found", "is_error": False, "tool_call_id": "c1"},
+]
 
 
 @pytest.fixture
@@ -37,8 +47,11 @@ def payload(submission: Submission, **overrides: object) -> dict[str, object]:
         "submission_id": submission.pk,
         "model": "claude-opus-4-8",
         "harness": "claude-code",
-        "tools": ["mbta-mcp"],
         "outcome": "success",
+        # `transcript` is required (ADR-0011); a minimal one keeps the shared
+        # helper valid. Tests exercising the transcript override it. `tools` is
+        # not sent — it is derived from the transcript's tool calls.
+        "transcript": [{"kind": "user", "content": "Renew my library card"}],
     }
     body.update(overrides)
     return body
@@ -175,7 +188,13 @@ def test_create_unknown_submission_returns_404(client: Client) -> None:
     User.objects.create_user(username="alice", password=PASSWORD)
     response = client.post(
         "/api/traces/",
-        {"submission_id": "NOTAREALID", "model": "m", "harness": "h", "outcome": "success"},
+        {
+            "submission_id": "NOTAREALID",
+            "model": "m",
+            "harness": "h",
+            "outcome": "success",
+            "transcript": [{"kind": "user", "content": "hi"}],
+        },
         content_type="application/json",
         headers=basic("alice", PASSWORD),
     )
@@ -210,3 +229,167 @@ def test_create_ignores_client_asserted_agent_flag(client: Client) -> None:
     )
     assert response.status_code == 201
     assert response.json()["submitted_by_agent"] is False
+
+
+# --- transcript (ADR-0011) ------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_create_persists_transcript(client: Client) -> None:
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Renew my library card")
+    response = client.post(
+        "/api/traces/",
+        payload(submission, transcript=TRANSCRIPT),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 201
+    assert RunTrace.objects.get().transcript == TRANSCRIPT
+    # The create response is the lean TraceOut — the transcript is not echoed.
+    assert "transcript" not in response.json()
+
+
+@pytest.mark.django_db
+def test_create_derives_tools_from_transcript(client: Client) -> None:
+    # `tools` is not accepted from the body — it is the distinct, sorted set of
+    # tool_call names in the transcript. Any `tools` in the body is ignored.
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Renew my library card")
+    transcript = [
+        {"kind": "user", "content": "renew"},
+        {"kind": "tool_call", "name": "library-mcp.lookup", "input": {}},
+        {"kind": "tool_result", "output": "ok"},
+        {"kind": "tool_call", "name": "mbta-mcp.plan", "input": {}},
+        {"kind": "tool_call", "name": "library-mcp.lookup", "input": {}},  # duplicate
+    ]
+    response = client.post(
+        "/api/traces/",
+        payload(submission, transcript=transcript, tools=["should-be-ignored"]),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 201
+    assert response.json()["tools"] == ["library-mcp.lookup", "mbta-mcp.plan"]
+    assert RunTrace.objects.get().tools == ["library-mcp.lookup", "mbta-mcp.plan"]
+
+
+@pytest.mark.django_db
+def test_create_with_no_tool_calls_derives_empty_tools(client: Client) -> None:
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Book a park")
+    response = client.post(
+        "/api/traces/",
+        payload(submission, transcript=[{"kind": "assistant", "content": "done"}]),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 201
+    assert RunTrace.objects.get().tools == []
+
+
+@pytest.mark.django_db
+def test_create_rejects_missing_transcript(client: Client) -> None:
+    # A trace must carry its evidence; a summary without steps is `422`.
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Book a park")
+    body = payload(submission)
+    del body["transcript"]
+    response = client.post(
+        "/api/traces/", body, content_type="application/json", headers=basic("alice", PASSWORD)
+    )
+    assert response.status_code == 422
+    assert RunTrace.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_rejects_empty_transcript(client: Client) -> None:
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Book a park")
+    response = client.post(
+        "/api/traces/",
+        payload(submission, transcript=[]),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 422
+    assert RunTrace.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_list_omits_transcript(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    RunTrace.objects.create(
+        submission=submission,
+        model="m",
+        harness="h",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=TRANSCRIPT,
+    )
+    body = client.get("/api/traces/").json()
+    # The list stays lean; transcripts are served per-id (FR-2, FR-7).
+    assert "transcript" not in body["items"][0]
+
+
+@pytest.mark.django_db
+def test_detail_endpoint_returns_transcript(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="claude-opus-4-8",
+        harness="claude-code",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=TRANSCRIPT,
+    )
+    response = client.get(f"/api/traces/{trace.pk}")
+    assert response.status_code == 200
+    assert response.json()["transcript"] == TRANSCRIPT
+
+
+@pytest.mark.django_db
+def test_detail_endpoint_unknown_id_is_404(client: Client) -> None:
+    assert client.get("/api/traces/NOTAREALID").status_code == 404
+
+
+@pytest.mark.django_db
+def test_create_rejects_unknown_step_kind(client: Client) -> None:
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Book a park")
+    response = client.post(
+        "/api/traces/",
+        payload(submission, transcript=[{"kind": "mumble", "content": "hi"}]),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 422
+    assert RunTrace.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_rejects_step_missing_required_field(client: Client) -> None:
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Book a park")
+    response = client.post(
+        "/api/traces/",
+        # a tool_call with no `name`
+        payload(submission, transcript=[{"kind": "tool_call", "input": {}}]),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 422
+    assert RunTrace.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_rejects_transcript_over_cap(client: Client) -> None:
+    User.objects.create_user(username="alice", password=PASSWORD)
+    submission = Submission.objects.create(title="Book a park")
+    huge = [{"kind": "user", "content": "x"}] * (MAX_TRANSCRIPT_STEPS + 1)
+    response = client.post(
+        "/api/traces/",
+        payload(submission, transcript=huge),
+        content_type="application/json",
+        headers=basic("alice", PASSWORD),
+    )
+    assert response.status_code == 422
+    assert RunTrace.objects.count() == 0

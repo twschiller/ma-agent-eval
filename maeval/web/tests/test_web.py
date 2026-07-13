@@ -491,6 +491,73 @@ def test_trace_list_renders(client: Client) -> None:
     assert b"Partially successful" in response.content
 
 
+@pytest.mark.django_db
+def test_trace_list_links_to_detail(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    trace = RunTrace.objects.create(
+        submission=submission, model="m", harness="h", outcome=RunTrace.Outcome.SUCCESS
+    )
+    body = client.get(reverse("web:trace_list")).content.decode()
+    assert reverse("web:trace_detail", args=[trace.pk]) in body
+
+
+@pytest.mark.django_db
+def test_trace_detail_renders_transcript(client: Client) -> None:
+    submission = Submission.objects.create(title="Renew my library card")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="claude-opus-4-8",
+        harness="claude-code",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=[
+            {"kind": "user", "content": "Renew my library card"},
+            {"kind": "reasoning", "content": "check the catalog first"},
+            {"kind": "assistant", "content": "Looking up your account"},
+            {"kind": "tool_call", "name": "library-mcp.lookup", "input": {"card": "123"}},
+            {"kind": "tool_result", "output": "Account found", "is_error": False},
+        ],
+    )
+    response = client.get(reverse("web:trace_detail", args=[trace.pk]))
+    assert response.status_code == 200
+    body = response.content.decode()
+    # Metadata + every step kind's content is rendered.
+    assert "claude-opus-4-8" in body
+    assert "check the catalog first" in body  # reasoning
+    assert "Looking up your account" in body  # assistant
+    assert "library-mcp.lookup" in body  # tool call name
+    assert "Account found" in body  # tool result output
+
+
+@pytest.mark.django_db
+def test_trace_detail_flags_error_tool_result(client: Client) -> None:
+    submission = Submission.objects.create(title="Book a park")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="m",
+        harness="h",
+        outcome=RunTrace.Outcome.FAILED,
+        transcript=[{"kind": "tool_result", "output": "boom", "is_error": True}],
+    )
+    body = client.get(reverse("web:trace_detail", args=[trace.pk])).content.decode()
+    assert "trace-code--error" in body
+
+
+@pytest.mark.django_db
+def test_trace_detail_empty_state_without_transcript(client: Client) -> None:
+    submission = Submission.objects.create(title="Book a park")
+    trace = RunTrace.objects.create(
+        submission=submission, model="m", harness="h", outcome=RunTrace.Outcome.SUCCESS
+    )
+    response = client.get(reverse("web:trace_detail", args=[trace.pk]))
+    assert response.status_code == 200
+    assert b"No transcript recorded" in response.content
+
+
+@pytest.mark.django_db
+def test_trace_detail_unknown_id_is_404(client: Client) -> None:
+    assert client.get(reverse("web:trace_detail", args=["NOTAREALID"])).status_code == 404
+
+
 # --- Content-Security-Policy (ADR-0010) ---------------------------------------
 
 

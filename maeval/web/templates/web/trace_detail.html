@@ -1,0 +1,96 @@
+{% extends "web/base.html" %}
+{% load maeval_extras %}
+
+{% block title %}Run trace &middot; {{ trace.submission.title|truncatewords:6 }} &middot; MA Agent Eval{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a href="{% url 'web:trace_list' %}">Run traces</a>
+  <span class="breadcrumb-nav__sep" aria-hidden="true">/</span>
+  <span aria-current="page">Trace <span class="mono">{{ trace.id|slice:":8" }}</span></span>
+</nav>
+
+<article class="panel trace-head">
+  <div class="trace-head__top">
+    {% include "web/_outcome_pill.html" %}
+    <h1 class="headline">Run trace</h1>
+  </div>
+  <dl class="trace-meta">
+    <dt>Task</dt>
+    <dd><a href="{% url 'web:submission_detail' trace.submission_id %}">{{ trace.submission.title }}</a></dd>
+
+    <dt>Model</dt>
+    <dd><span class="mono">{{ trace.model }}</span></dd>
+
+    <dt>Harness</dt>
+    <dd><span class="mono">{{ trace.harness }}</span></dd>
+
+    <dt>Tools</dt>
+    <dd>
+      {% if trace.tools %}
+        <span class="tool-tags">
+          {% for tool in trace.tools %}<span class="tool-tag">{{ tool }}</span>{% endfor %}
+        </span>
+      {% else %}
+        <span class="muted">&mdash;</span>
+      {% endif %}
+    </dd>
+
+    <dt>Reported by</dt>
+    <dd>
+      {{ trace.author.username|default:"anonymous" }}
+      {% if trace.submitted_by_agent %}{% include "web/_agent_badge.html" %}{% endif %}
+    </dd>
+
+    <dt>Recorded</dt>
+    <dd><time class="mono" datetime="{{ trace.created_at|date:'c' }}">{{ trace.created_at|date:"M j, Y, H:i" }}</time></dd>
+  </dl>
+</article>
+
+<section class="transcript-section" aria-labelledby="transcript-heading">
+  <div class="section-head">
+    <h2 class="headline" id="transcript-heading">Transcript</h2>
+    {% if trace.transcript %}
+      <span class="result-count">{{ trace.transcript|length }} step{{ trace.transcript|length|pluralize }}</span>
+    {% endif %}
+  </div>
+
+  {% if trace.transcript %}
+    {# Steps are stored already-normalized (ADR-0011); render each by `kind`. #}
+    <ol class="transcript">
+      {% for step in trace.transcript %}
+        <li class="trace-step trace-step--{{ step.kind }}">
+          {% if step.kind == "user" %}
+            <p class="trace-step__role">User</p>
+            <div class="trace-step__body prose">{{ step.content|linebreaksbr }}</div>
+          {% elif step.kind == "assistant" %}
+            <p class="trace-step__role">Assistant</p>
+            <div class="trace-step__body prose">{{ step.content|linebreaksbr }}</div>
+          {% elif step.kind == "reasoning" %}
+            <details class="trace-reasoning">
+              <summary class="trace-reasoning__summary">Reasoning</summary>
+              <div class="trace-step__body prose muted">{{ step.content|linebreaksbr }}</div>
+            </details>
+          {% elif step.kind == "tool_call" %}
+            <p class="trace-step__role">Tool call <span class="mono trace-step__tool">{{ step.name }}</span></p>
+            {% if step.input %}<pre class="trace-code">{{ step.input|to_json }}</pre>{% endif %}
+          {% elif step.kind == "tool_result" %}
+            <p class="trace-step__role">
+              Tool result{% if step.is_error %} <span class="trace-step__flag">error</span>{% endif %}
+            </p>
+            <pre class="trace-code{% if step.is_error %} trace-code--error{% endif %}">{{ step.output }}</pre>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <div class="empty">
+      <p class="empty__title">No transcript recorded</p>
+      <p class="empty__body">
+        This trace has no recorded transcript. Traces submitted through the API
+        always carry one; this record was created without it.
+      </p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

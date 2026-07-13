@@ -114,6 +114,17 @@ def trace_list(request: HtmxHttpRequest) -> HttpResponse:
     return render(request, "web/trace_list.html", {"page_obj": page})
 
 
+def trace_detail(request: HtmxHttpRequest, trace_id: str) -> HttpResponse:
+    """One run trace: its metadata and the recorded transcript, if any.
+
+    A public read path (like the trace list). The transcript is rendered from
+    the stored normalized steps (ADR-0011); a summary-only trace shows an empty
+    state.
+    """
+    trace = get_object_or_404(RunTrace.objects.select_related("author", "submission"), pk=trace_id)
+    return render(request, "web/trace_detail.html", {"trace": trace})
+
+
 def llms_txt(request: HtmxHttpRequest) -> HttpResponse:
     """Serve ``/llms.txt`` (https://llmstxt.org): an LLM-oriented map of the site.
 

@@ -369,6 +369,21 @@ key now; it is never stored and can't be shown again. Key *metadata* elsewhere (
 `mae_`-prefix, scopes, last-used time, expiry) lives in the standard data table — only
 the secret gets this treatment.
 
+### Run transcript (trace detail)
+
+A trace's recorded steps (ADR-0011) render as one flat, border-defined list in
+the list-row register — depth from rule and tone, never shadow. Each step leads
+with a sentence-case role label in the Label register (Slate Muted), not an
+uppercase tracked eyebrow (the No-Eyebrow Rule holds). **User** turns take a
+faint Sunken tint so the exchange alternates visibly — the label is the primary
+signal and the tint only secondary, per the never-by-color-alone rule.
+**Reasoning** collapses into a `<details>` (a ▸/▾ marker, muted), present but out
+of the reader's way. **Tool call** and **tool result** are machine data: mono
+(the Machine-Facts-Are-Mono Rule) in a Sunken inset code block, scrollable and
+line-wrapping; a failed result uses the Failed tint fill and border with the word
+"error" spelled out beside the label. No colored side-stripe distinguishes the
+kinds — full borders and tint fills only.
+
 ### Upvote control (signature — the demand signal)
 
 An up-triangle + count in Civic Ember. Unvoted: ember outline. Voted: ember fill.
