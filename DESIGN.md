@@ -377,8 +377,9 @@ with a sentence-case role label in the Label register (Slate Muted), not an
 uppercase tracked eyebrow (the No-Eyebrow Rule holds). **User** turns take a
 faint Sunken tint so the exchange alternates visibly — the label is the primary
 signal and the tint only secondary, per the never-by-color-alone rule.
-**Reasoning** collapses into a `<details>` (a ▸/▾ marker, muted), present but out
-of the reader's way. **Tool call** and **tool result** are machine data: mono
+**Reasoning** collapses into a `<details>` whose summary is a muted, bordered
+pill carrying a ▸/▾ marker and a trailing Show/Hide verb — the disclosure reads
+as a control, present but out of the reader's way. **Tool call** and **tool result** are machine data: mono
 (the Machine-Facts-Are-Mono Rule) in a Sunken inset code block, scrollable and
 line-wrapping; a failed result uses the Failed tint fill and border with the word
 "error" spelled out beside the label. No colored side-stripe distinguishes the

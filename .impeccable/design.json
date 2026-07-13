@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-12T00:00:00Z",
+  "generatedAt": "2026-07-13T01:44:05Z",
   "title": "Design System: MA Agent Eval",
   "extensions": {
     "colorMeta": {
@@ -100,6 +100,14 @@
       "description": "Government-masthead top bar: solid Harbor Ink, white wordmark, blue underline on the current section.",
       "html": "<nav class=\"ds-masthead\"><span class=\"ds-brand\">MA Agent Eval</span><span class=\"ds-navlinks\"><a class=\"ds-navlink ds-navlink-current\" href=\"#\">Submissions</a><a class=\"ds-navlink\" href=\"#\">Run traces</a></span></nav>",
       "css": ".ds-masthead { display: flex; align-items: center; gap: 24px; background: #181e24; color: #fff; padding: 12px 16px; font-family: 'Public Sans', system-ui, sans-serif; } .ds-brand { font-weight: 700; font-size: 1.125rem; } .ds-navlinks { display: inline-flex; gap: 16px; } .ds-navlink { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.9375rem; padding: 4px 0; border-bottom: 2px solid transparent; } .ds-navlink:hover { border-bottom-color: #6ba9db; } .ds-navlink-current { border-bottom-color: #0d6fb5; } .ds-navlink:focus-visible { outline: none; box-shadow: 0 0 0 2px #005694; }"
+    },
+    {
+      "name": "Reasoning Disclosure",
+      "kind": "custom",
+      "refersTo": "trace-reasoning",
+      "description": "A trace transcript's collapsed reasoning step. The summary is a muted, bordered pill with a chevron and a trailing Show/Hide verb, so the disclosure reads as a control. Native <details>, no JS.",
+      "html": "<details class=\"ds-reasoning\"><summary class=\"ds-reasoning-summary\">Reasoning</summary><div class=\"ds-reasoning-body\">This is a civic-services information query. I should not answer from memory — I need current official sources, then extract the exact agencies, fees, and step sequence.</div></details>",
+      "css": ".ds-reasoning { margin: 0; } .ds-reasoning-summary { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; list-style: none; padding: 4px 12px; border: 1px solid #dbdee2; border-radius: 999px; background: #fff; font-family: 'Public Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.01em; color: #50565c; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-reasoning-summary::-webkit-details-marker { display: none; } .ds-reasoning-summary::before { content: '\\25b8'; font-size: 0.7em; } .ds-reasoning[open] .ds-reasoning-summary::before { content: '\\25be'; } .ds-reasoning-summary::after { content: 'Show'; font-weight: 400; color: #50565c; } .ds-reasoning[open] .ds-reasoning-summary::after { content: 'Hide'; } .ds-reasoning-summary:hover { background: #f1f4f7; border-color: #c0c5c9; color: #181e24; } .ds-reasoning-summary:focus-visible { outline: 2px solid #005694; outline-offset: 2px; } .ds-reasoning[open] .ds-reasoning-summary { margin-bottom: 8px; } .ds-reasoning-body { margin: 0; font-family: 'Public Sans', system-ui, sans-serif; font-size: 1rem; line-height: 1.6; color: #50565c; }"
     }
   ],
   "narrative": {
