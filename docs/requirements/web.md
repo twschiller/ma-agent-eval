@@ -65,6 +65,16 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   no transcript shows an empty state. — `maeval/web/views.py` (`trace_detail`),
   `maeval/web/templates/web/trace_detail.html`
 
+- FR-4c. The natural-language steps (user / assistant / reasoning) render their
+  content as Markdown — emphasis, lists, tables, fenced code — since that is what
+  agents and models emit. The content is untrusted, so it is run through an
+  allowlist sanitizer (`nh3`) after rendering: no script, no inline event
+  handlers or styles, no images, and links limited to `http`/`https`/`mailto`
+  with `rel="nofollow noopener noreferrer"`. This is the primary escaping wall;
+  the CSP (ADR-0010) is defense-in-depth behind it (ADR-0012). —
+  `maeval/web/markdown.py`, `maeval/web/templatetags/maeval_extras.py`,
+  `maeval/web/templates/web/trace_detail.html`
+
 - FR-4b. Each submission row carries a *supply signal* opposite its upvote
   (demand) tally, so the list reads demand against ability at a glance. A
   submission with traces shows its per-outcome breakdown — a proportional

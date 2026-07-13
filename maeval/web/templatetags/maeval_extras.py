@@ -7,8 +7,25 @@ directly. Nothing here reaches the DB or holds business logic.
 import json
 
 from django import template
+from django.utils.safestring import SafeString, mark_safe
+
+from maeval.web.markdown import render_markdown
 
 register = template.Library()
+
+
+@register.filter(name="markdown")
+def markdown(value: str | None) -> SafeString:
+    """Render untrusted transcript prose as sanitized Markdown (ADR-0012).
+
+    The heavy lifting — render then allowlist-sanitize — lives in
+    ``maeval.web.markdown``; this only marks the already-sanitized HTML safe so
+    the template emits it as markup. ``mark_safe`` here is sound precisely
+    *because* ``render_markdown`` returns sanitizer output, never raw HTML.
+    """
+    # noqa/nosec: mark_safe is sound here because render_markdown returns
+    # allowlist-sanitized (nh3) HTML, never raw input — the reason this filter exists.
+    return mark_safe(render_markdown(value or ""))  # noqa: S308  # nosec B308 B703
 
 
 @register.filter(name="to_json")

@@ -155,6 +155,97 @@ body {
   max-width: 70ch; /* 65–75ch measure */
   text-wrap: pretty;
 }
+/* Rendered Markdown lives inside `.prose` (transcript steps, ADR-0012). Style
+ * the block elements the renderer emits so they read as flowing prose, not
+ * default-margined browser output. Tokens only — no one-off literals. */
+.prose > :first-child {
+  margin-top: 0;
+}
+.prose > :last-child {
+  margin-bottom: 0;
+}
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose pre,
+.prose table {
+  margin: 0 0 var(--space-md);
+}
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  margin: var(--space-lg) 0 var(--space-sm);
+  line-height: 1.3;
+}
+.prose h1 {
+  font-size: 1.25rem;
+}
+.prose h2 {
+  font-size: 1.125rem;
+}
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-size: 1rem;
+}
+.prose ul,
+.prose ol {
+  padding-left: var(--space-xl);
+}
+.prose li + li {
+  margin-top: var(--space-xs);
+}
+.prose blockquote {
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--border-strong);
+  color: var(--ink-muted);
+}
+/* Inline code: mono chip, distinct from the sunken code-block register. */
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  background: var(--sunken);
+  border-radius: var(--radius-sm);
+  word-break: break-word;
+}
+/* Fenced code blocks share the tool-call inset register (`.trace-code`). */
+.prose pre {
+  padding: var(--space-md);
+  overflow: auto;
+  background: var(--sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.prose pre code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.prose hr {
+  margin: var(--space-lg) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.prose table {
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.prose th,
+.prose td {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.prose th {
+  background: var(--sunken);
+  font-weight: 600;
+}
 .label {
   font-size: 0.8125rem;
   font-weight: 600;
