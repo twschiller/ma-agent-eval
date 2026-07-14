@@ -393,3 +393,67 @@ def test_create_rejects_transcript_over_cap(client: Client) -> None:
     )
     assert response.status_code == 422
     assert RunTrace.objects.count() == 0
+
+
+# --- external_urls: links surfaced in a run, for the trace-detail breakout ----
+#
+# Pure transcript parsing (no DB): distinct http(s) URLs from `tool_call` inputs,
+# `tool_result` outputs, and `assistant` text, deduped in first-seen order.
+
+
+def test_external_urls_pulls_from_tool_calls_results_and_assistant() -> None:
+    urls = RunTrace.external_urls(
+        [
+            {"kind": "user", "content": "check https://user.example should be ignored"},
+            {"kind": "reasoning", "content": "https://reasoning.example ignored too"},
+            {"kind": "assistant", "content": "See https://assistant.example for details"},
+            {
+                "kind": "tool_call",
+                "name": "fetch",
+                "input": {"url": "https://tool-call.example/page"},
+            },
+            {"kind": "tool_result", "output": "landed on https://tool-result.example ok"},
+        ]
+    )
+    assert urls == [
+        "https://assistant.example",
+        "https://tool-call.example/page",
+        "https://tool-result.example",
+    ]
+    # user prompts and private reasoning are not part of the breakout.
+    assert not any("user.example" in u or "reasoning.example" in u for u in urls)
+
+
+def test_external_urls_dedupes_preserving_first_seen_order() -> None:
+    urls = RunTrace.external_urls(
+        [
+            {"kind": "assistant", "content": "https://b.example then https://a.example"},
+            {"kind": "tool_result", "output": "again https://a.example and https://b.example"},
+        ]
+    )
+    assert urls == ["https://b.example", "https://a.example"]
+
+
+def test_external_urls_strips_trailing_punctuation_and_wrappers() -> None:
+    urls = RunTrace.external_urls(
+        [
+            {"kind": "assistant", "content": "done (see https://mass.gov/renew). thanks"},
+            {"kind": "assistant", "content": "link: https://boston.gov/library, or the map"},
+        ]
+    )
+    assert urls == ["https://mass.gov/renew", "https://boston.gov/library"]
+
+
+def test_external_urls_only_http_schemes() -> None:
+    urls = RunTrace.external_urls(
+        [
+            {"kind": "tool_call", "name": "mail", "input": {"to": "mailto:clerk@boston.gov"}},
+            {"kind": "tool_call", "name": "run", "input": {"cmd": "cat file:///etc/passwd"}},
+            {"kind": "assistant", "content": "ok https://mass.gov and http://neu.edu"},
+        ]
+    )
+    assert urls == ["https://mass.gov", "http://neu.edu"]
+
+
+def test_external_urls_empty_when_none_present() -> None:
+    assert RunTrace.external_urls([{"kind": "assistant", "content": "no links here"}]) == []

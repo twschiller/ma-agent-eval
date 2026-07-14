@@ -387,6 +387,23 @@ line-wrapping; a failed result uses the Failed tint fill and border with the wor
 "error" spelled out beside the label. No colored side-stripe distinguishes the
 kinds — full borders and tint fills only.
 
+### External links checked (trace detail)
+
+Above the transcript, a breakout lists the external URLs a run surfaced — pulled
+from its tool calls, tool results, and assistant messages. Because these are
+untrusted, agent-submitted links, the block warns before it invites a click. A
+full-border amber caution note (the warning register, as with the unmet-demand
+flag — tint fill + 1px border, never a colored side-stripe) leads with the
+warning-triangle glyph and spells out that following a link leaves MA Agent Eval
+for a site we don't control. The links themselves sit in a flat, border-defined
+list in the transcript register: the URL in IBM Plex Mono (the
+Machine-Facts-Are-Mono Rule) carrying Harbor Blue (the capability axis — the
+Two-Axis Rule holds, no new accent), with a small outbound-arrow glyph and a
+terse "Opens external site" cue at the row's right edge so the leave is signalled
+by glyph *and* word, not color alone. Each link opens in a new tab and is
+hardened `rel="nofollow noopener noreferrer external"`, matching the render-time
+link policy (ADR-0012).
+
 ### Upvote control (signature — the demand signal)
 
 An up-triangle + count in Civic Ember. Unvoted: ember outline. Voted: ember fill.

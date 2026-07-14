@@ -75,6 +75,18 @@ Numbered, verifiable requirements. Cite backing code by `path:line`.
   `maeval/web/markdown.py`, `maeval/web/templatetags/maeval_extras.py`,
   `maeval/web/templates/web/trace_detail.html`
 
+- FR-4d. The trace detail page leads, above the transcript, with a breakout of
+  the distinct external URLs the run surfaced — extracted from its `tool_call`
+  inputs, `tool_result` outputs, and `assistant` message text (not `user`
+  prompts or `reasoning`), deduped in first-seen order, `http`/`https` only. Each
+  is a clickable link that opens in a new tab, hardened
+  `rel="nofollow noopener noreferrer external"` (matching FR-4c's link policy). A
+  caution note and a per-link cue warn — with a glyph and words, not color alone
+  — that following a link leaves the site for an untrusted external destination.
+  The breakout is absent when the run surfaced no URLs. —
+  `maeval/traces/models.py` (`RunTrace.external_urls`), `maeval/web/views.py`
+  (`trace_detail`), `maeval/web/templates/web/trace_detail.html`
+
 - FR-4b. Each submission row carries a *supply signal* opposite its upvote
   (demand) tally, so the list reads demand against ability at a glance. A
   submission with traces shows its per-outcome breakdown — a proportional
