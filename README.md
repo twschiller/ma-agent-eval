@@ -59,6 +59,10 @@ live at `/api/docs`.
 - [`docs/requirements/`](docs/requirements/) — golden specs per behavioral area.
 - [`docs/deployment.md`](docs/deployment.md) — Fly.io + Neon runbook.
 
+## Related projects
+
+- [Civic AI Tools](https://civicaitools.org/)
+
 ## License
 
 [MIT](LICENSE) © Todd Schiller
