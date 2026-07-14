@@ -143,7 +143,14 @@ def trace_detail(request: HtmxHttpRequest, trace_id: str) -> HttpResponse:
     state.
     """
     trace = get_object_or_404(RunTrace.objects.select_related("author", "submission"), pk=trace_id)
-    return render(request, "web/trace_detail.html", {"trace": trace})
+    # External links the run touched (tool calls, tool results, assistant text),
+    # pulled out as a warning-gated breakout above the transcript.
+    external_urls = RunTrace.external_urls(trace.transcript)
+    return render(
+        request,
+        "web/trace_detail.html",
+        {"trace": trace, "external_urls": external_urls},
+    )
 
 
 def llms_txt(request: HtmxHttpRequest) -> HttpResponse:

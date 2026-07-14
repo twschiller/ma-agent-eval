@@ -8,11 +8,26 @@ do against a given civic task. See `docs/requirements/traces.md` for the
 behavioral contract.
 """
 
+import json
+import re
+
 from django.conf import settings
 from django.db import models
 
 from maeval.common.models import TimestampedModel
 from maeval.submissions.models import Submission
+
+# External links a run surfaced, for the "links checked in this run" breakout on
+# the trace detail page. Only http(s): the schemes a transcript legitimately
+# links out to (mirroring the render-time link allowlist, ADR-0012) and the only
+# ones that name an external *site* a reader would visit. The character class
+# stops at whitespace and the delimiters that bound a URL in prose/markup/JSON
+# (quotes, backtick, closing brackets), so a link inside `(…)`, `"…"`, or a JSON
+# string is captured without its wrapper.
+_URL_RE = re.compile(r"https?://[^\s<>\"'`)\]}]+", re.IGNORECASE)
+# Sentence punctuation a greedy match trails but that is almost never part of the
+# link ("see https://x.gov/renew." -> drop the period).
+_URL_TRAILING = ".,;:!?"
 
 
 class RunTrace(TimestampedModel):
@@ -75,6 +90,40 @@ class RunTrace(TimestampedModel):
                 if step.get("kind") == "tool_call" and step.get("name")
             }
         )
+
+    @staticmethod
+    def external_urls(transcript: list[dict]) -> list[str]:
+        """Distinct external URLs surfaced in a transcript, in first-seen order.
+
+        Pulls from what the run *checked* and what it *showed the user*:
+        `tool_call` inputs, `tool_result` outputs, and `assistant` message text
+        (not `user` prompts or private `reasoning`). Only http(s) — the links a
+        reader would follow and the only schemes the render-time allowlist
+        trusts (ADR-0012). Deduped with order preserved, so the list reads as the
+        run's browsing trail. Powers the external-links breakout on the trace
+        detail page, where following one is flagged as leaving the site."""
+        urls: list[str] = []
+        seen: set[str] = set()
+        for step in transcript:
+            kind = step.get("kind")
+            if kind == "assistant":
+                text = step.get("content", "")
+            elif kind == "tool_result":
+                text = step.get("output", "")
+            elif kind == "tool_call":
+                # Scan the JSON-serialized input so a URL nested anywhere in the
+                # arguments is found; the `"` delimiters bound each match.
+                text = json.dumps(step.get("input", {}), ensure_ascii=False)
+            else:
+                continue
+            if not isinstance(text, str):  # defensive: seed rows bypass the schema
+                continue
+            for match in _URL_RE.finditer(text):
+                url = match.group(0).rstrip(_URL_TRAILING)
+                if url and url not in seen:
+                    seen.add(url)
+                    urls.append(url)
+        return urls
 
     def __str__(self) -> str:
         return f"{self.model} ({self.outcome})"

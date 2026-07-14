@@ -619,6 +619,45 @@ def test_trace_detail_flags_error_tool_result(client: Client) -> None:
     assert "trace-code--error" in body
 
 
+@pytest.mark.django_db
+def test_trace_detail_lists_external_urls_as_hardened_links(client: Client) -> None:
+    """The breakout lists URLs the run surfaced (tool calls + assistant text) as
+    external links opened in a new tab and hardened rel, with a leaving warning."""
+    submission = Submission.objects.create(title="Renew my library card")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="m",
+        harness="h",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=[
+            {"kind": "tool_call", "name": "fetch", "input": {"url": "https://mass.gov/renew"}},
+            {"kind": "assistant", "content": "Also see https://boston.gov/library"},
+        ],
+    )
+    body = client.get(reverse("web:trace_detail", args=[trace.pk])).content.decode()
+    assert "url-breakout" in body
+    assert 'href="https://mass.gov/renew"' in body
+    assert 'href="https://boston.gov/library"' in body
+    # Untrusted external links: new tab, hardened rel, and a spelled-out warning.
+    assert 'target="_blank"' in body
+    assert 'rel="nofollow noopener noreferrer external"' in body
+    assert "external site" in body.lower()
+
+
+@pytest.mark.django_db
+def test_trace_detail_omits_url_breakout_when_no_links(client: Client) -> None:
+    submission = Submission.objects.create(title="Book a park")
+    trace = RunTrace.objects.create(
+        submission=submission,
+        model="m",
+        harness="h",
+        outcome=RunTrace.Outcome.SUCCESS,
+        transcript=[{"kind": "assistant", "content": "No links in this run"}],
+    )
+    body = client.get(reverse("web:trace_detail", args=[trace.pk])).content.decode()
+    assert "url-breakout" not in body
+
+
 # --- Transcript Markdown rendering + sanitization (ADR-0012) ------------------
 
 

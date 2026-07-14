@@ -1178,6 +1178,88 @@ textarea.field-input {
   border-color: var(--failed);
 }
 
+/* ---- External links checked (trace detail) ------------------------------ */
+/* URLs a run surfaced — its tool calls/results and assistant messages — pulled
+ * out of the transcript into a breakout above it. The links carry the capability
+ * axis (Harbor Blue, the Two-Axis Rule); the note and the per-row "Opens
+ * external site" cue warn, with a glyph and words (never color alone), that
+ * following one leaves MA Agent Eval for an untrusted external destination. */
+.url-breakout {
+  margin-bottom: var(--space-xl);
+}
+/* A full-border tinted caution box (no colored side-stripe — Named Rule). Amber
+ * is the warning register here, as with the unmet-demand flag. */
+.url-breakout__note {
+  display: flex;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-md);
+  background: var(--partial-fill);
+  border: 1px solid var(--partial);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--partial);
+}
+.url-breakout__note-glyph {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+}
+/* Flat, border-defined list in the transcript register — depth from rule/tone. */
+.url-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+.url-list__item {
+  border-top: 1px solid var(--border);
+}
+.url-list__item:first-child {
+  border-top: none;
+}
+.url-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  color: var(--primary);
+  text-decoration: none;
+}
+.url-link:hover {
+  background: var(--sunken);
+}
+.url-link:hover .url-link__href {
+  text-decoration: underline;
+}
+.url-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.url-link__href {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-all;
+}
+/* Terse leaving cue, pushed to the right; the note carries the full warning. */
+.url-link__leaving {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.url-link__ext {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--ink-muted);
+}
+
 /* ---- Breadcrumb ---------------------------------------------------------- */
 
 .breadcrumb-nav {

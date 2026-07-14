@@ -47,6 +47,48 @@
   </dl>
 </article>
 
+{% if external_urls %}
+  {% comment %}
+  Links the run checked (tool calls/results) or showed the user (assistant
+  messages), pulled out of the transcript. Untrusted, agent-submitted URLs: each
+  opens in a new tab, is hardened `rel="… external"` matching the render-time
+  link policy (ADR-0012), and the note warns — glyph + word, not color alone —
+  that following one leaves MA Agent Eval for a site we don't control.
+  {% endcomment %}
+  <section class="url-breakout" aria-labelledby="urls-heading">
+    <div class="section-head">
+      <h2 class="headline" id="urls-heading">Links checked in this run</h2>
+      <span class="result-count">{{ external_urls|length }} link{{ external_urls|length|pluralize }}</span>
+    </div>
+    <p class="url-breakout__note">
+      <svg class="url-breakout__note-glyph" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+        <path d="M8 2.3l6.2 11.4H1.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M8 6.3v3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="8" cy="11.6" r="0.55" fill="currentColor"/>
+      </svg>
+      URLs pulled from this run&rsquo;s tool calls and messages. They were submitted
+      with the trace and point to external sites outside MA Agent Eval &mdash;
+      following one takes you to a site we don&rsquo;t control.
+    </p>
+    <ul class="url-list">
+      {% for url in external_urls %}
+        <li class="url-list__item">
+          <a class="url-link" href="{{ url }}" target="_blank"
+             rel="nofollow noopener noreferrer external"
+             title="Opens this external site in a new tab">
+            <span class="url-link__href mono">{{ url }}</span>
+            <svg class="url-link__ext" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+              <path d="M6 3.5h6.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12.5 3.5l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="url-link__leaving">Opens external site</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+
 <section class="transcript-section" aria-labelledby="transcript-heading">
   <div class="section-head">
     <h2 class="headline" id="transcript-heading">Transcript</h2>
