@@ -116,7 +116,7 @@ repos:
         name: Lint Dockerfiles (hadolint)
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
+    rev: v2.4.3
     hooks:
       - id: codespell
         name: Detect typos
