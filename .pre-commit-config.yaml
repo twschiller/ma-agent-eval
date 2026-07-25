@@ -56,7 +56,7 @@ repos:
         files: ^maeval/web/templates/.*\.html$
 
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.5.3
+    rev: v2.5.4
     hooks:
       # Lint + format the hand-written web JS (config in biome.json). Scoped to
       # our own scripts; the vendored, minified Bootstrap/htmx are never touched.
