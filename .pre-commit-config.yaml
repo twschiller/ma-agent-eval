@@ -62,7 +62,7 @@ repos:
       # our own scripts; the vendored, minified Bootstrap/htmx are never touched.
       - id: biome-check
         name: Lint & format web JS (Biome)
-        additional_dependencies: ["@biomejs/biome@2.5.3"]
+        additional_dependencies: ["@biomejs/biome@2.5.4"]
         files: ^maeval/web/static/web/js/.*\.js$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
